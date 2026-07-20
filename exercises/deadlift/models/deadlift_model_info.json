@@ -1,0 +1,12 @@
+{
+    "input_shape": 125,
+    "num_classes": 4,
+    "classes": [
+        "back_arch_posture",
+        "hand_grip_width",
+        "leg_position_width",
+        "none"
+    ],
+    "training_samples": 2788,
+    "test_samples": 310
+}

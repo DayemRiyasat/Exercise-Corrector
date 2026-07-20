@@ -1,0 +1,15 @@
+{
+    "input_shape": 99,
+    "num_classes": 7,
+    "classes": [
+        "back_too_backward_lean",
+        "back_too_forward_lean",
+        "hand_above_near_head",
+        "hand_position_too_close",
+        "hand_position_too_wide",
+        "none",
+        "one_hand_up_other_down"
+    ],
+    "training_samples": 6390,
+    "test_samples": 710
+}
