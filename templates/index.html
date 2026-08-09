@@ -5,118 +5,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exercise Form Correction System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
     <div class="container">
-        <!-- Header -->
+
+        <!-- Hero -->
         <header class="header">
-            <h1>💪 Exercise Form Correction System</h1>
-            <p class="subtitle">AI-Powered Real-Time Posture Analysis</p>
+            <span class="eyebrow">Real-time posture analysis</span>
+            <h1><span class="hero-kicker">Shape your</span>Form</h1>
+            <p class="subtitle">Point a camera at your lift. The model reads your joints, counts your reps, and tells
+                you what to fix while you are still moving.</p>
+            <div class="hero-chips">
+                <span class="hero-chip"><i class="bi bi-lightning-charge-fill"></i>5 exercises</span>
+                <span class="hero-chip"><i class="bi bi-broadcast"></i>Live, video or photo</span>
+                <span class="hero-chip"><i class="bi bi-shield-check"></i>Runs in your browser</span>
+            </div>
         </header>
 
         <!-- Step 1: Exercise Selection -->
-
-        <!-- Step 1: Exercise Selection -->
-        <!-- <section class="section" id="exercise-selection">
-    <h2>Step 1: Select Exercise</h2>
-    <div class="exercise-grid">
-        <div class="exercise-card" data-exercise="squat">
-            <div class="exercise-icon">🏋️</div>
-            <h3>Squat</h3>
-            <p>Back & Leg Analysis</p>
-        </div>
-        
-         <div class="exercise-card" data-exercise="lunge">
-            <div class="exercise-icon">🦵</div>
-            <h3>Lunge</h3>
-            <p>Leg & Balance Analysis</p>
-        </div>
-          <div class="exercise-card" data-exercise="pushup">
-            <div class="exercise-icon">🤸</div>
-            <h3>Push-up</h3>
-            <p>Arm & Core Analysis</p>
-        </div>
-        <div class="exercise-card disabled" data-exercise="deadlift">
-            <div class="exercise-icon">💪</div>
-            <h3>Deadlift</h3>
-            <p>Coming Soon</p>
-            <div class="coming-soon-badge">Soon</div>
-        </div>
-        <div class="exercise-card disabled" data-exercise="bicep_curl">
-            <div class="exercise-icon">💪</div>
-            <h3>Bicep Curl</h3>
-            <p>Coming Soon</p>
-            <div class="coming-soon-badge">Soon</div>
-        </div>
-     
-    </div>
-</section> -->
         <section class="section" id="exercise-selection">
-            <h2>Step 1: Select Exercise</h2>
+            <span class="eyebrow"><span class="step-dot">1</span>Step one</span>
+            <h2>Pick your move</h2>
+            <p class="section-lead">Each exercise loads its own model, so choose the lift you are about to perform.</p>
+
             <div class="exercise-grid">
-                <div class="exercise-card" data-exercise="squat">
-                    <div class="exercise-icon">🏋️‍♂️</div> <!-- Barbell Squat -->
-                    <h3>Squat</h3>
-                    <p>Back & Leg Analysis</p>
-                </div>
+                <button type="button" class="exercise-card" data-exercise="squat">
+                    <span class="exercise-icon"><i class="bi bi-person-standing"></i></span>
+                    <span class="exercise-name">Squat</span>
+                    <span class="exercise-meta">Back and leg analysis</span>
+                </button>
 
-                <div class="exercise-card" data-exercise="lunge">
-                    <div class="exercise-icon">🦵</div> <!-- Leg / Lunge -->
-                    <h3>Lunge</h3>
-                    <p>Leg & Balance Analysis</p>
-                </div>
+                <button type="button" class="exercise-card" data-exercise="lunge">
+                    <span class="exercise-icon"><i class="bi bi-person-walking"></i></span>
+                    <span class="exercise-name">Lunge</span>
+                    <span class="exercise-meta">Leg and balance analysis</span>
+                </button>
 
-                <div class="exercise-card" data-exercise="pushup">
-                    <div class="exercise-icon">🤸‍♂️</div> <!-- Person doing push-up / plank pose -->
-                    <h3>Push-up</h3>
-                    <p>Arm & Core Analysis</p>
-                </div>
+                <button type="button" class="exercise-card" data-exercise="pushup">
+                    <span class="exercise-icon"><i class="bi bi-person-arms-up"></i></span>
+                    <span class="exercise-name">Push-up</span>
+                    <span class="exercise-meta">Arm and core analysis</span>
+                </button>
 
-                <div class="exercise-card" data-exercise="deadlift">
-                    <div class="exercise-icon">🏋️</div>
-                    <h3>Deadlift</h3>
-                    <p>Back & Hip Analysis</p>
-                </div>
+                <button type="button" class="exercise-card" data-exercise="deadlift">
+                    <span class="exercise-icon"><i class="bi bi-arrow-bar-up"></i></span>
+                    <span class="exercise-name">Deadlift</span>
+                    <span class="exercise-meta">Back and hip analysis</span>
+                </button>
 
-
-                <div class="exercise-card" data-exercise="bicep_curl">
-                    <div class="exercise-icon">💪</div>
-                    <h3>Bicep Curl</h3>
-                    <p>Arm & Back Analysis</p>
-                </div>
-
+                <button type="button" class="exercise-card" data-exercise="bicep_curl">
+                    <span class="exercise-icon"><i class="bi bi-arrow-repeat"></i></span>
+                    <span class="exercise-name">Bicep curl</span>
+                    <span class="exercise-meta">Arm and back analysis</span>
+                </button>
             </div>
         </section>
 
-
         <!-- Step 2: Input Mode Selection -->
         <section class="section hidden" id="input-mode-selection">
-            <h2>Step 2: Choose Input Source</h2>
+            <span class="eyebrow"><span class="step-dot">2</span>Step two</span>
+            <h2>Choose your input</h2>
+            <p class="section-lead">Work live from your camera, or upload something you already recorded.</p>
+
             <div class="mode-buttons">
-                <button class="mode-btn" id="webcam-btn">
-                    <span class="mode-icon">📷</span>
-                    <span>Webcam</span>
-                    <span class="mode-desc">Real-time analysis</span>
+                <button class="mode-btn mode-btn--live" id="webcam-btn">
+                    <span class="mode-icon"><i class="bi bi-camera-video-fill"></i></span>
+                    <span class="mode-name">Webcam</span>
+                    <span class="mode-desc">Live feedback while you move</span>
+                    <span class="mode-go" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
                 </button>
-                <button class="mode-btn" id="video-btn">
-                    <span class="mode-icon">🎥</span>
-                    <span>Video File</span>
-                    <span class="mode-desc">Upload & analyze</span>
+
+                <button class="mode-btn mode-btn--clip" id="video-btn">
+                    <span class="mode-icon"><i class="bi bi-film"></i></span>
+                    <span class="mode-name">Video</span>
+                    <span class="mode-desc">Upload a clip and review every rep</span>
+                    <span class="mode-go" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
                 </button>
-                <button class="mode-btn" id="image-btn">
-                    <span class="mode-icon">🖼️</span>
-                    <span>Image</span>
-                    <span class="mode-desc">Static analysis</span>
+
+                <button class="mode-btn mode-btn--still" id="image-btn">
+                    <span class="mode-icon"><i class="bi bi-image-fill"></i></span>
+                    <span class="mode-name">Photo</span>
+                    <span class="mode-desc">Check a single position in detail</span>
+                    <span class="mode-go" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
                 </button>
             </div>
         </section>
 
         <!-- Step 3: Analysis Interface -->
         <section class="section hidden" id="analysis-section">
+
             <!-- Webcam Mode -->
             <div id="webcam-mode" class="hidden">
                 <div class="video-container">
@@ -124,17 +108,20 @@
                     <canvas id="output-canvas"></canvas>
                     <div class="rep-counter-overlay" id="rep-counter-overlay">
                         <div class="rep-number">0</div>
-                        <div class="rep-label">REPS</div>
+                        <div class="rep-label">Reps</div>
                     </div>
                 </div>
 
                 <div class="controls">
-                    <button id="start-webcam" class="btn btn-success">Start Camera</button>
-                    <button id="stop-webcam" class="btn btn-danger hidden">Stop Camera</button>
-                    <button id="reset-reps" class="btn btn-warning hidden">Reset Reps</button>
+                    <button id="start-webcam" class="btn btn-success"><i class="bi bi-play-fill"></i>Start
+                        camera</button>
+                    <button id="stop-webcam" class="btn btn-danger hidden"><i class="bi bi-stop-fill"></i>Stop
+                        camera</button>
+                    <button id="reset-reps" class="btn btn-warning hidden"><i
+                            class="bi bi-arrow-counterclockwise"></i>Reset reps</button>
                     <label class="checkbox-label">
                         <input type="checkbox" id="show-landmarks" checked>
-                        Show Landmarks
+                        Show landmarks
                     </label>
                 </div>
             </div>
@@ -142,27 +129,35 @@
             <!-- Video Upload Mode -->
             <div id="video-mode" class="hidden">
                 <div class="upload-area" id="upload-area">
-                    <div class="upload-icon">📁</div>
-                    <p>Click to upload or drag and drop</p>
-                    <p class="upload-hint">MP4, AVI, MOV (Max 100MB)</p>
+                    <div class="upload-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+                    <p>Drop a video here, or click to browse</p>
+                    <p class="upload-hint">MP4, AVI or MOV, up to 100 MB</p>
                     <input type="file" id="video-input" accept="video/*" hidden>
                 </div>
+
                 <div class="video-preview hidden" id="video-preview">
                     <div class="video-display-container">
                         <video id="preview-video" muted></video>
                         <canvas id="video-output-canvas"></canvas>
                         <div class="rep-counter-overlay" id="video-rep-counter-overlay">
                             <div class="rep-number">0</div>
-                            <div class="rep-label">REPS</div>
+                            <div class="rep-label">Reps</div>
                         </div>
                     </div>
+
                     <div class="video-controls">
-                        <button id="analyze-video" class="btn btn-primary">Start Analysis</button>
-                        <button id="pause-video" class="btn btn-warning hidden">Pause</button>
-                        <button id="resume-video" class="btn btn-success hidden">Resume</button>
-                        <button id="stop-video" class="btn btn-danger hidden">Stop</button>
-                        <button id="upload-another-video" class="btn btn-secondary hidden">Upload Another Video</button>
+                        <button id="analyze-video" class="btn btn-primary"><i class="bi bi-play-fill"></i>Start
+                            analysis</button>
+                        <button id="pause-video" class="btn btn-warning hidden"><i
+                                class="bi bi-pause-fill"></i>Pause</button>
+                        <button id="resume-video" class="btn btn-success hidden"><i
+                                class="bi bi-play-fill"></i>Resume</button>
+                        <button id="stop-video" class="btn btn-danger hidden"><i
+                                class="bi bi-stop-fill"></i>Stop</button>
+                        <button id="upload-another-video" class="btn btn-secondary hidden"><i
+                                class="bi bi-arrow-repeat"></i>Upload another video</button>
                     </div>
+
                     <div class="video-progress hidden" id="video-progress">
                         <div class="progress-info">
                             <span id="progress-text">Processing: 0%</span>
@@ -173,80 +168,91 @@
                         </div>
                     </div>
                 </div>
+
                 <div id="video-results" class="hidden"></div>
             </div>
 
-            <!-- NEW: Image Upload Mode -->
+            <!-- Image Upload Mode -->
             <div id="image-mode" class="hidden">
                 <div class="upload-area" id="image-upload-area">
-                    <div class="upload-icon">🖼️</div>
-                    <p>Click to upload or drag and drop</p>
-                    <p class="upload-hint">JPG, PNG (Max 10MB)</p>
+                    <div class="upload-icon"><i class="bi bi-image-fill"></i></div>
+                    <p>Drop a photo here, or click to browse</p>
+                    <p class="upload-hint">JPG or PNG, up to 10 MB</p>
                     <input type="file" id="image-input" accept="image/*" hidden>
                 </div>
+
                 <div class="image-preview hidden" id="image-preview">
                     <div class="image-comparison">
                         <div class="image-box">
-                            <h4>Original Image</h4>
-                            <img id="original-image" alt="Original">
+                            <h4>Original</h4>
+                            <img id="original-image" alt="Uploaded photo">
                         </div>
                         <div class="image-box">
-                            <h4>Analyzed Image</h4>
+                            <h4>Analysed</h4>
                             <canvas id="analyzed-image"></canvas>
                         </div>
                     </div>
+
                     <div class="image-controls">
-                        <button id="analyze-image" class="btn btn-primary">Analyze Posture</button>
-                        <button id="upload-another" class="btn btn-secondary">Upload Another</button>
+                        <button id="analyze-image" class="btn btn-primary"><i class="bi bi-crosshair"></i>Analyse
+                            posture</button>
+                        <button id="upload-another" class="btn btn-secondary"><i class="bi bi-arrow-repeat"></i>Upload
+                            another</button>
                     </div>
                 </div>
+
                 <div id="image-results" class="hidden">
-                    <h3>📊 Posture Analysis Results</h3>
+                    <h3>Posture breakdown</h3>
                     <div class="analysis-grid">
                         <div class="analysis-card">
-                            <div class="analysis-icon">📐</div>
+                            <div class="analysis-icon"><i class="bi bi-rulers"></i></div>
                             <div class="analysis-content">
-                                <h4>Knee Angle</h4>
+                                <h4>Knee angle</h4>
                                 <p class="analysis-value" id="knee-angle-value">-</p>
-                                <p class="analysis-detail">Left: <span id="left-knee">-</span>° | Right: <span
-                                        id="right-knee">-</span>°</p>
+                                <p class="analysis-detail">Left <span id="left-knee">-</span>&deg; &middot; Right <span
+                                        id="right-knee">-</span>&deg;</p>
                             </div>
                         </div>
+
                         <div class="analysis-card">
-                            <div class="analysis-icon">🦴</div>
+                            <div class="analysis-icon"><i class="bi bi-triangle"></i></div>
                             <div class="analysis-content">
-                                <h4>Hip Angle</h4>
+                                <h4>Hip angle</h4>
                                 <p class="analysis-value" id="hip-angle-value">-</p>
                             </div>
                         </div>
+
                         <div class="analysis-card">
-                            <div class="analysis-icon">⬇️</div>
+                            <div class="analysis-icon"><i class="bi bi-arrow-down-short"></i></div>
                             <div class="analysis-content">
-                                <h4>Squat Depth</h4>
+                                <h4>Depth</h4>
                                 <p class="analysis-value" id="depth-value">-</p>
                             </div>
                         </div>
+
                         <div class="analysis-card">
-                            <div class="analysis-icon">↔️</div>
+                            <div class="analysis-icon"><i class="bi bi-arrows"></i></div>
                             <div class="analysis-content">
-                                <h4>Stance Width</h4>
+                                <h4>Stance width</h4>
                                 <p class="analysis-value" id="stance-value">-</p>
                             </div>
                         </div>
+
                         <div class="analysis-card">
-                            <div class="analysis-icon">📏</div>
+                            <div class="analysis-icon"><i class="bi bi-align-end"></i></div>
                             <div class="analysis-content">
-                                <h4>Back Position</h4>
+                                <h4>Back position</h4>
                                 <p class="analysis-value" id="back-lean-value">-</p>
-                                <p class="analysis-detail">Lean: <span id="lean-amount">-</span>%</p>
+                                <p class="analysis-detail">Lean <span id="lean-amount">-</span>%</p>
                             </div>
                         </div>
+
                         <div class="analysis-card">
-                            <div class="analysis-icon">🎯</div>
+                            <div class="analysis-icon"><i class="bi bi-bullseye"></i></div>
                             <div class="analysis-content">
-                                <h4>Overall Form</h4>
+                                <h4>Overall form</h4>
                                 <p class="analysis-value" id="overall-form">-</p>
-                                <p class="analysis-detail">Confidence: <span id="form-confidence">-</span>%</p>
+                                <p class="analysis-detail">Confidence <span id="form-confidence">-</span>%</p>
                             </div>
                         </div>
                     </div>
@@ -256,12 +262,12 @@
             <!-- Status Panel -->
             <div class="status-panel" id="status-panel">
                 <div class="status-header">
-                    <h3>Current Status</h3>
-                    <span class="status-badge" id="status-badge">Waiting...</span>
+                    <h3>Live status</h3>
+                    <span class="status-badge" id="status-badge">Waiting</span>
                 </div>
 
                 <div class="status-content">
-                    <div class="status-icon" id="status-icon">⏳</div>
+                    <div class="status-icon" id="status-icon"><i class="bi bi-hourglass-split"></i></div>
                     <h4 id="status-message">Position yourself in frame</h4>
                     <div class="confidence-bar">
                         <div class="confidence-label">Confidence</div>
@@ -273,16 +279,16 @@
                 </div>
 
                 <div class="tips-section" id="tips-section">
-                    <h4>💡 Tips to Improve</h4>
+                    <h4><i class="bi bi-lightbulb-fill"></i>Tips to improve</h4>
                     <ul id="tips-list">
-                        <li>Position yourself fully in frame</li>
-                        <li>Ensure good lighting</li>
+                        <li>Get your whole body inside the frame</li>
+                        <li>Light the room from the front, not behind you</li>
                         <li>Stand against a plain background</li>
                     </ul>
                 </div>
 
                 <div class="stats-section">
-                    <h4>📊 Session Statistics</h4>
+                    <h4><i class="bi bi-graph-up"></i>This session</h4>
                     <div class="stats-grid">
                         <div class="stat-item">
                             <div class="stat-value" id="stat-reps">0</div>
@@ -294,7 +300,7 @@
                         </div>
                         <div class="stat-item">
                             <div class="stat-value" id="stat-bad">0</div>
-                            <div class="stat-label">Incorrect</div>
+                            <div class="stat-label">Off</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value" id="stat-total">0</div>
@@ -316,7 +322,7 @@
         </div>
     </div>
 
-         <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 
 </html>
