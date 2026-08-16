@@ -1,11 +1,18 @@
 // static/js/app.js
 // Front-end controller. Runs MediaPipe pose detection in the browser
-// (via pose_client.js) and sends landmarks to the Flask backend.
+// (via pose_client.js), sends landmarks to the Flask backend, and logs
+// each finished set to the local session history.
 
 import {
   initPose, detectImage, detectVideo,
   loadModel, analyzeFrame, analyzeImage, resetCounter
 } from './pose_client.js';
+
+import {
+  EXERCISE_META, faultLabel, formatClock,
+  loadSessions, saveSession, clearSessions,
+  renderRail, renderPersonalBests, renderHistory, renderProgress
+} from './history.js';
 
 // ---- Config ----
 const ANALYZE_INTERVAL_MS = 150;   // throttle server calls (~6-7 per second)
@@ -27,7 +34,12 @@ let videoRunning = false;
 let videoPaused = false;
 let lastAnalyze = 0;
 let lastTimestamp = 0;
-const stats = { good: 0, bad: 0, total: 0, prevRep: 0 };
+let historyFilter = 'all';
+let chartRange = 'week';
+let timerId = null;
+
+const stats = { good: 0, bad: 0, total: 0, prevRep: 0, faults: {} };
+const session = { active: false, mode: null, exercise: null, startedAt: null, startMs: 0 };
 
 // ---- Small helpers ----
 const $ = (id) => document.getElementById(id);
@@ -48,19 +60,174 @@ function setLoading(on, msg) {
   on ? show(overlay) : hide(overlay);
 }
 
-// ---- Status panel ----
+let toastTimer = null;
+function toast(message, icon = 'bi-check-circle-fill') {
+  const el = $('toast');
+  $('toast-text').textContent = message;
+  el.querySelector('i').className = `bi ${icon}`;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3400);
+}
+
+// ---- View switching --------------------------------------------------------
+function switchView(name) {
+  document.querySelectorAll('.tab').forEach(tab => {
+    const on = tab.dataset.view === name;
+    tab.classList.toggle('active', on);
+    tab.setAttribute('aria-selected', String(on));
+  });
+  ['train', 'history', 'progress'].forEach(v => {
+    $(`view-${v}`).classList.toggle('hidden', v !== name);
+  });
+
+  const sessions = loadSessions();
+  if (name === 'history') renderHistory(sessions, historyFilter);
+  if (name === 'progress') renderProgress(sessions, chartRange);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => switchView(tab.dataset.view));
+});
+
+document.querySelectorAll('[data-goto]').forEach(btn => {
+  btn.addEventListener('click', () => switchView(btn.dataset.goto));
+});
+
+function refreshAll() {
+  const sessions = loadSessions();
+  renderRail(sessions);
+  renderPersonalBests(sessions);
+  renderHistory(sessions, historyFilter);
+  renderProgress(sessions, chartRange);
+}
+
+// History filters
+$('history-filters').addEventListener('click', (e) => {
+  const chip = e.target.closest('.filter-chip');
+  if (!chip) return;
+  historyFilter = chip.dataset.filter;
+  document.querySelectorAll('.filter-chip')
+    .forEach(c => c.classList.toggle('active', c === chip));
+  renderHistory(loadSessions(), historyFilter);
+});
+
+// Chart range
+$('range-toggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-range]');
+  if (!btn) return;
+  chartRange = btn.dataset.range;
+  document.querySelectorAll('#range-toggle button')
+    .forEach(b => b.classList.toggle('active', b === btn));
+  renderProgress(loadSessions(), chartRange);
+});
+
+// Clear history
+$('clear-history').addEventListener('click', () => {
+  const count = loadSessions().length;
+  if (!count) { toast('No sessions to clear', 'bi-info-circle-fill'); return; }
+  if (!confirm(`Delete all ${count} saved session${count === 1 ? '' : 's'}? This cannot be undone.`)) return;
+  clearSessions();
+  refreshAll();
+  toast('History cleared', 'bi-trash3-fill');
+});
+
+// ---- Session lifecycle -----------------------------------------------------
+function startSession(mode) {
+  endSession(false);
+  session.active = true;
+  session.mode = mode;
+  session.exercise = currentExercise;
+  session.startedAt = new Date().toISOString();
+  session.startMs = Date.now();
+
+  show($('stage-live'));
+  $('stage-timer').textContent = '00:00';
+  clearInterval(timerId);
+  timerId = setInterval(() => {
+    $('stage-timer').textContent = formatClock((Date.now() - session.startMs) / 1000);
+  }, 1000);
+}
+
+function endSession(announce = true) {
+  clearInterval(timerId);
+  hide($('stage-live'));
+  if (!session.active) return;
+  session.active = false;
+
+  const durationSec = Math.round((Date.now() - session.startMs) / 1000);
+  if (stats.total < 1) {
+    if (announce) toast('No reps counted, nothing saved', 'bi-info-circle-fill');
+    return;
+  }
+
+  const accuracy = Math.round((stats.good / stats.total) * 100);
+  saveSession({
+    id: `s_${session.startMs}_${Math.random().toString(36).slice(2, 7)}`,
+    exercise: session.exercise,
+    mode: session.mode,
+    startedAt: session.startedAt,
+    durationSec,
+    reps: stats.total,
+    good: stats.good,
+    bad: stats.bad,
+    accuracy,
+    faults: { ...stats.faults }
+  });
+
+  refreshAll();
+  if (announce) {
+    const top = Object.entries(stats.faults).sort((a, b) => b[1] - a[1])[0];
+    const note = top ? ` \u00b7 mostly ${faultLabel(top[0]).toLowerCase()}` : '';
+    toast(`Saved: ${stats.total} reps, ${accuracy}% clean${note}`);
+  }
+}
+
+$('finish-session').addEventListener('click', () => {
+  if (!session.active && stats.total < 1) {
+    toast('Start a set first', 'bi-info-circle-fill');
+    return;
+  }
+  stopWebcam();
+  stopVideo();
+  switchView('history');
+});
+
+// Save an in-flight session if the tab is closed mid-set.
+window.addEventListener('beforeunload', () => endSession(false));
+
+// ---- Status panel ----------------------------------------------------------
 const COLOR_MAP = {
-  success: '#22c55e', danger: '#ef4444',
-  warning: '#f59e0b', secondary: '#9ca3af'
+  success: '#12C48B', danger: '#FF5C5C',
+  warning: '#FFB020', secondary: '#7C8CA3'
 };
+
+const ICON_MAP = {
+  success: { cls: 'is-good', icon: 'bi-check-circle-fill' },
+  danger: { cls: 'is-bad', icon: 'bi-exclamation-octagon-fill' },
+  warning: { cls: 'is-warn', icon: 'bi-exclamation-triangle-fill' },
+  secondary: { cls: '', icon: 'bi-hourglass-split' }
+};
+
+function setStatusIcon(color) {
+  const el = $('status-icon');
+  const cfg = ICON_MAP[color] || ICON_MAP.secondary;
+  el.className = `status-icon ${cfg.cls}`.trim();
+  el.innerHTML = `<i class="bi ${cfg.icon}"></i>`;
+}
 
 function updateStatus(result) {
   if (!result || !result.success) {
-    $('status-badge').textContent = 'No pose';
+    const badge = $('status-badge');
+    badge.textContent = 'No pose';
+    badge.style.backgroundColor = COLOR_MAP.secondary;
     $('status-message').textContent =
       (result && result.message) || 'Position yourself in frame';
     $('confidence-fill').style.width = '0%';
     $('confidence-value').textContent = '0%';
+    setStatusIcon('secondary');
     return;
   }
   const fb = result.feedback || {};
@@ -68,6 +235,7 @@ function updateStatus(result) {
   badge.textContent = fb.status || result.prediction || '-';
   badge.style.backgroundColor = COLOR_MAP[fb.color] || COLOR_MAP.secondary;
   $('status-message').textContent = fb.message || '';
+  setStatusIcon(fb.color);
 
   const pct = Math.round((result.confidence || 0) * 100);
   $('confidence-fill').style.width = pct + '%';
@@ -99,7 +267,13 @@ function updateReps(result, overlayId) {
     const good = result.prediction === 'none';
     for (let i = stats.prevRep; i < count; i++) {
       stats.total += 1;
-      good ? (stats.good += 1) : (stats.bad += 1);
+      if (good) {
+        stats.good += 1;
+      } else {
+        stats.bad += 1;
+        const key = result.prediction || 'unknown';
+        stats.faults[key] = (stats.faults[key] || 0) + 1;
+      }
     }
     stats.prevRep = count;
     renderStats();
@@ -117,18 +291,22 @@ function renderStats() {
 
 function resetStats() {
   stats.good = stats.bad = stats.total = stats.prevRep = 0;
+  stats.faults = {};
   renderStats();
 }
 
-// ---- Landmark drawing ----
-function drawSkeleton(canvas, video, landmarks, show) {
+// ---- Landmark drawing ------------------------------------------------------
+function drawSkeleton(canvas, video, landmarks, showLm) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!show || !landmarks) return;
+  if (!showLm || !landmarks) return;
 
   const w = canvas.width, h = canvas.height;
-  ctx.strokeStyle = 'rgba(0,0,255,0.8)';
-  ctx.lineWidth = 2;
+  const scale = Math.max(1, Math.min(w, h) / 480);
+
+  ctx.strokeStyle = 'rgba(1, 211, 210, .92)';
+  ctx.lineWidth = 4 * scale;
+  ctx.lineCap = 'round';
   POSE_CONNECTIONS.forEach(([a, b]) => {
     const p = landmarks[a], q = landmarks[b];
     if (!p || !q) return;
@@ -137,11 +315,16 @@ function drawSkeleton(canvas, video, landmarks, show) {
     ctx.lineTo(q.x * w, q.y * h);
     ctx.stroke();
   });
-  ctx.fillStyle = 'rgba(0,255,0,0.9)';
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.strokeStyle = '#0D77E7';
+  ctx.lineWidth = 2 * scale;
   landmarks.forEach(p => {
+    if ((p.visibility ?? 1) < 0.4) return;
     ctx.beginPath();
-    ctx.arc(p.x * w, p.y * h, 3, 0, 2 * Math.PI);
+    ctx.arc(p.x * w, p.y * h, 4 * scale, 0, 2 * Math.PI);
     ctx.fill();
+    ctx.stroke();
   });
 }
 
@@ -151,7 +334,7 @@ function sizeCanvasTo(canvas, mediaEl) {
   if (w && h) { canvas.width = w; canvas.height = h; }
 }
 
-// ---- Exercise + mode selection ----
+// ---- Exercise + mode selection ---------------------------------------------
 document.querySelectorAll('.exercise-card').forEach(card => {
   if (card.classList.contains('disabled')) return;
   card.addEventListener('click', async () => {
@@ -159,6 +342,10 @@ document.querySelectorAll('.exercise-card').forEach(card => {
       .forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
     currentExercise = card.dataset.exercise;
+
+    const meta = EXERCISE_META[currentExercise] || {};
+    $('stage-exercise-name').textContent = meta.label || currentExercise;
+    $('stage-exercise-icon').className = `bi ${meta.icon || 'bi-activity'}`;
 
     setLoading(true, 'Loading model...');
     if (!poseReady) {
@@ -170,6 +357,7 @@ document.querySelectorAll('.exercise-card').forEach(card => {
     if (!res.success) { alert(res.error || 'Model failed to load'); return; }
 
     show($('input-mode-selection'));
+    $('input-mode-selection').scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 });
 
@@ -186,15 +374,17 @@ function switchMode(mode) {
   if (mode === 'webcam') show($('webcam-mode'));
   if (mode === 'video') show($('video-mode'));
   if (mode === 'image') show($('image-mode'));
+  $('analysis-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ---- Webcam mode ----
+// ---- Webcam mode -----------------------------------------------------------
 $('start-webcam').addEventListener('click', startWebcam);
 $('stop-webcam').addEventListener('click', stopWebcam);
 $('reset-reps').addEventListener('click', async () => {
   await resetCounter(currentExercise);
   resetStats();
   $('rep-counter-overlay').querySelector('.rep-number').textContent = '0';
+  toast('Rep counter reset', 'bi-arrow-counterclockwise');
 });
 
 async function startWebcam() {
@@ -210,16 +400,20 @@ async function startWebcam() {
   webcamRunning = true;
   hide($('start-webcam')); show($('stop-webcam')); show($('reset-reps'));
   resetStats();
+  await resetCounter(currentExercise);
+  startSession('webcam');
   webcamLoop();
 }
 
 function stopWebcam() {
+  const wasRunning = webcamRunning;
   webcamRunning = false;
   if (webcamStream) {
     webcamStream.getTracks().forEach(t => t.stop());
     webcamStream = null;
   }
   show($('start-webcam')); hide($('stop-webcam')); hide($('reset-reps'));
+  if (wasRunning) endSession(true);
 }
 
 async function webcamLoop() {
@@ -246,7 +440,7 @@ async function webcamLoop() {
   requestAnimationFrame(webcamLoop);
 }
 
-// ---- Video upload mode ----
+// ---- Video upload mode -----------------------------------------------------
 const videoUpload = $('upload-area');
 videoUpload.addEventListener('click', () => $('video-input').click());
 videoUpload.addEventListener('dragover', e => e.preventDefault());
@@ -290,24 +484,26 @@ async function startVideoAnalysis() {
   videoRunning = true; videoPaused = false;
   hide($('analyze-video')); show($('pause-video')); show($('stop-video'));
   show($('upload-another-video')); show($('video-progress'));
+  startSession('video');
   await video.play();
   videoLoop();
 }
 
 function stopVideo() {
+  const wasRunning = videoRunning;
   videoRunning = false; videoPaused = false;
   const video = $('preview-video');
   if (video) video.pause();
   show($('analyze-video'));
   hide($('pause-video')); hide($('resume-video')); hide($('stop-video'));
+  if (wasRunning) endSession(true);
 }
 
 async function videoLoop() {
   if (!videoRunning || videoPaused) return;
   const video = $('preview-video');
   const canvas = $('video-output-canvas');
-  const showLm = document.getElementById('show-landmarks')
-    ? $('show-landmarks').checked : true;
+  const showLm = $('show-landmarks') ? $('show-landmarks').checked : true;
 
   if (video.ended) { stopVideo(); return; }
 
@@ -331,7 +527,7 @@ async function videoLoop() {
   requestAnimationFrame(videoLoop);
 }
 
-// ---- Image mode ----
+// ---- Image mode ------------------------------------------------------------
 const imageUpload = $('image-upload-area');
 imageUpload.addEventListener('click', () => $('image-input').click());
 imageUpload.addEventListener('dragover', e => e.preventDefault());
@@ -354,7 +550,7 @@ function loadImageFile(file) {
 
 $('analyze-image').addEventListener('click', async () => {
   const img = $('original-image');
-  if (!img.complete) { await img.decode().catch(() => {}); }
+  if (!img.complete) { await img.decode().catch(() => { }); }
 
   setLoading(true, 'Analyzing...');
   const landmarks = await detectImage(img);
@@ -396,3 +592,6 @@ function populateImageResults(result) {
   setText('overall-form', fb.status || result.prediction || '-');
   setText('form-confidence', Math.round((result.confidence || 0) * 100));
 }
+
+// ---- Boot ------------------------------------------------------------------
+refreshAll();
