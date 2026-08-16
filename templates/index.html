@@ -4,322 +4,569 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exercise Form Correction System</title>
+    <meta name="theme-color" content="#01D3D2">
+    <title>ShapeForm &middot; Exercise Form Correction</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body>
-    <div class="container">
 
-        <!-- Hero -->
-        <header class="header">
-            <span class="eyebrow">Real-time posture analysis</span>
-            <h1><span class="hero-kicker">Shape your</span>Form</h1>
-            <p class="subtitle">Point a camera at your lift. The model reads your joints, counts your reps, and tells
-                you what to fix while you are still moving.</p>
-            <div class="hero-chips">
-                <span class="hero-chip"><i class="bi bi-lightning-charge-fill"></i>5 exercises</span>
-                <span class="hero-chip"><i class="bi bi-broadcast"></i>Live, video or photo</span>
-                <span class="hero-chip"><i class="bi bi-shield-check"></i>Runs in your browser</span>
-            </div>
-        </header>
-
-        <!-- Step 1: Exercise Selection -->
-        <section class="section" id="exercise-selection">
-            <span class="eyebrow"><span class="step-dot">1</span>Step one</span>
-            <h2>Pick your move</h2>
-            <p class="section-lead">Each exercise loads its own model, so choose the lift you are about to perform.</p>
-
-            <div class="exercise-grid">
-                <button type="button" class="exercise-card" data-exercise="squat">
-                    <span class="exercise-icon"><i class="bi bi-person-standing"></i></span>
-                    <span class="exercise-name">Squat</span>
-                    <span class="exercise-meta">Back and leg analysis</span>
-                </button>
-
-                <button type="button" class="exercise-card" data-exercise="lunge">
-                    <span class="exercise-icon"><i class="bi bi-person-walking"></i></span>
-                    <span class="exercise-name">Lunge</span>
-                    <span class="exercise-meta">Leg and balance analysis</span>
-                </button>
-
-                <button type="button" class="exercise-card" data-exercise="pushup">
-                    <span class="exercise-icon"><i class="bi bi-person-arms-up"></i></span>
-                    <span class="exercise-name">Push-up</span>
-                    <span class="exercise-meta">Arm and core analysis</span>
-                </button>
-
-                <button type="button" class="exercise-card" data-exercise="deadlift">
-                    <span class="exercise-icon"><i class="bi bi-arrow-bar-up"></i></span>
-                    <span class="exercise-name">Deadlift</span>
-                    <span class="exercise-meta">Back and hip analysis</span>
-                </button>
-
-                <button type="button" class="exercise-card" data-exercise="bicep_curl">
-                    <span class="exercise-icon"><i class="bi bi-arrow-repeat"></i></span>
-                    <span class="exercise-name">Bicep curl</span>
-                    <span class="exercise-meta">Arm and back analysis</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- Step 2: Input Mode Selection -->
-        <section class="section hidden" id="input-mode-selection">
-            <span class="eyebrow"><span class="step-dot">2</span>Step two</span>
-            <h2>Choose your input</h2>
-            <p class="section-lead">Work live from your camera, or upload something you already recorded.</p>
-
-            <div class="mode-buttons">
-                <button class="mode-btn mode-btn--live" id="webcam-btn">
-                    <span class="mode-icon"><i class="bi bi-camera-video-fill"></i></span>
-                    <span class="mode-name">Webcam</span>
-                    <span class="mode-desc">Live feedback while you move</span>
-                    <span class="mode-go" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
-                </button>
-
-                <button class="mode-btn mode-btn--clip" id="video-btn">
-                    <span class="mode-icon"><i class="bi bi-film"></i></span>
-                    <span class="mode-name">Video</span>
-                    <span class="mode-desc">Upload a clip and review every rep</span>
-                    <span class="mode-go" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
-                </button>
-
-                <button class="mode-btn mode-btn--still" id="image-btn">
-                    <span class="mode-icon"><i class="bi bi-image-fill"></i></span>
-                    <span class="mode-name">Photo</span>
-                    <span class="mode-desc">Check a single position in detail</span>
-                    <span class="mode-go" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
-                </button>
-            </div>
-        </section>
-
-        <!-- Step 3: Analysis Interface -->
-        <section class="section hidden" id="analysis-section">
-
-            <!-- Webcam Mode -->
-            <div id="webcam-mode" class="hidden">
-                <div class="video-container">
-                    <video id="webcam" autoplay playsinline></video>
-                    <canvas id="output-canvas"></canvas>
-                    <div class="rep-counter-overlay" id="rep-counter-overlay">
-                        <div class="rep-number">0</div>
-                        <div class="rep-label">Reps</div>
+    <!-- ====================================================================
+         App bar: brand, lifetime totals, view tabs
+         ==================================================================== -->
+    <header class="app-bar">
+        <div class="container app-bar-inner">
+            <div class="brand-row">
+                <div class="brand">
+                    <span class="brand-mark"><i class="bi bi-activity"></i></span>
+                    <div>
+                        <div class="brand-name">ShapeForm</div>
+                        <span class="brand-tag">Real-time form coaching</span>
                     </div>
                 </div>
 
-                <div class="controls">
-                    <button id="start-webcam" class="btn btn-success"><i class="bi bi-play-fill"></i>Start
-                        camera</button>
-                    <button id="stop-webcam" class="btn btn-danger hidden"><i class="bi bi-stop-fill"></i>Stop
-                        camera</button>
-                    <button id="reset-reps" class="btn btn-warning hidden"><i
-                            class="bi bi-arrow-counterclockwise"></i>Reset reps</button>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="show-landmarks" checked>
-                        Show landmarks
-                    </label>
-                </div>
-            </div>
-
-            <!-- Video Upload Mode -->
-            <div id="video-mode" class="hidden">
-                <div class="upload-area" id="upload-area">
-                    <div class="upload-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
-                    <p>Drop a video here, or click to browse</p>
-                    <p class="upload-hint">MP4, AVI or MOV, up to 100 MB</p>
-                    <input type="file" id="video-input" accept="video/*" hidden>
-                </div>
-
-                <div class="video-preview hidden" id="video-preview">
-                    <div class="video-display-container">
-                        <video id="preview-video" muted></video>
-                        <canvas id="video-output-canvas"></canvas>
-                        <div class="rep-counter-overlay" id="video-rep-counter-overlay">
-                            <div class="rep-number">0</div>
-                            <div class="rep-label">Reps</div>
-                        </div>
+                <div class="brand-stat">
+                    <div class="brand-stat-item">
+                        <div class="brand-stat-value" id="rail-sessions">0</div>
+                        <div class="brand-stat-label">Sessions</div>
                     </div>
-
-                    <div class="video-controls">
-                        <button id="analyze-video" class="btn btn-primary"><i class="bi bi-play-fill"></i>Start
-                            analysis</button>
-                        <button id="pause-video" class="btn btn-warning hidden"><i
-                                class="bi bi-pause-fill"></i>Pause</button>
-                        <button id="resume-video" class="btn btn-success hidden"><i
-                                class="bi bi-play-fill"></i>Resume</button>
-                        <button id="stop-video" class="btn btn-danger hidden"><i
-                                class="bi bi-stop-fill"></i>Stop</button>
-                        <button id="upload-another-video" class="btn btn-secondary hidden"><i
-                                class="bi bi-arrow-repeat"></i>Upload another video</button>
+                    <div class="brand-stat-item">
+                        <div class="brand-stat-value" id="rail-reps">0</div>
+                        <div class="brand-stat-label">Reps</div>
                     </div>
-
-                    <div class="video-progress hidden" id="video-progress">
-                        <div class="progress-info">
-                            <span id="progress-text">Processing: 0%</span>
-                            <span id="progress-frames">Frame: 0 / 0</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="video-progress-fill"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="video-results" class="hidden"></div>
-            </div>
-
-            <!-- Image Upload Mode -->
-            <div id="image-mode" class="hidden">
-                <div class="upload-area" id="image-upload-area">
-                    <div class="upload-icon"><i class="bi bi-image-fill"></i></div>
-                    <p>Drop a photo here, or click to browse</p>
-                    <p class="upload-hint">JPG or PNG, up to 10 MB</p>
-                    <input type="file" id="image-input" accept="image/*" hidden>
-                </div>
-
-                <div class="image-preview hidden" id="image-preview">
-                    <div class="image-comparison">
-                        <div class="image-box">
-                            <h4>Original</h4>
-                            <img id="original-image" alt="Uploaded photo">
-                        </div>
-                        <div class="image-box">
-                            <h4>Analysed</h4>
-                            <canvas id="analyzed-image"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="image-controls">
-                        <button id="analyze-image" class="btn btn-primary"><i class="bi bi-crosshair"></i>Analyse
-                            posture</button>
-                        <button id="upload-another" class="btn btn-secondary"><i class="bi bi-arrow-repeat"></i>Upload
-                            another</button>
-                    </div>
-                </div>
-
-                <div id="image-results" class="hidden">
-                    <h3>Posture breakdown</h3>
-                    <div class="analysis-grid">
-                        <div class="analysis-card">
-                            <div class="analysis-icon"><i class="bi bi-rulers"></i></div>
-                            <div class="analysis-content">
-                                <h4>Knee angle</h4>
-                                <p class="analysis-value" id="knee-angle-value">-</p>
-                                <p class="analysis-detail">Left <span id="left-knee">-</span>&deg; &middot; Right <span
-                                        id="right-knee">-</span>&deg;</p>
-                            </div>
-                        </div>
-
-                        <div class="analysis-card">
-                            <div class="analysis-icon"><i class="bi bi-triangle"></i></div>
-                            <div class="analysis-content">
-                                <h4>Hip angle</h4>
-                                <p class="analysis-value" id="hip-angle-value">-</p>
-                            </div>
-                        </div>
-
-                        <div class="analysis-card">
-                            <div class="analysis-icon"><i class="bi bi-arrow-down-short"></i></div>
-                            <div class="analysis-content">
-                                <h4>Depth</h4>
-                                <p class="analysis-value" id="depth-value">-</p>
-                            </div>
-                        </div>
-
-                        <div class="analysis-card">
-                            <div class="analysis-icon"><i class="bi bi-arrows"></i></div>
-                            <div class="analysis-content">
-                                <h4>Stance width</h4>
-                                <p class="analysis-value" id="stance-value">-</p>
-                            </div>
-                        </div>
-
-                        <div class="analysis-card">
-                            <div class="analysis-icon"><i class="bi bi-align-end"></i></div>
-                            <div class="analysis-content">
-                                <h4>Back position</h4>
-                                <p class="analysis-value" id="back-lean-value">-</p>
-                                <p class="analysis-detail">Lean <span id="lean-amount">-</span>%</p>
-                            </div>
-                        </div>
-
-                        <div class="analysis-card">
-                            <div class="analysis-icon"><i class="bi bi-bullseye"></i></div>
-                            <div class="analysis-content">
-                                <h4>Overall form</h4>
-                                <p class="analysis-value" id="overall-form">-</p>
-                                <p class="analysis-detail">Confidence <span id="form-confidence">-</span>%</p>
-                            </div>
-                        </div>
+                    <div class="brand-stat-item">
+                        <div class="brand-stat-value" id="rail-streak">0</div>
+                        <div class="brand-stat-label">Day streak</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Status Panel -->
-            <div class="status-panel" id="status-panel">
-                <div class="status-header">
-                    <h3>Live status</h3>
-                    <span class="status-badge" id="status-badge">Waiting</span>
-                </div>
-
-                <div class="status-content">
-                    <div class="status-icon" id="status-icon"><i class="bi bi-hourglass-split"></i></div>
-                    <h4 id="status-message">Position yourself in frame</h4>
-                    <div class="confidence-bar">
-                        <div class="confidence-label">Confidence</div>
-                        <div class="confidence-progress">
-                            <div class="confidence-fill" id="confidence-fill" style="width: 0%"></div>
-                        </div>
-                        <div class="confidence-value" id="confidence-value">0%</div>
-                    </div>
-                </div>
-
-                <div class="tips-section" id="tips-section">
-                    <h4><i class="bi bi-lightbulb-fill"></i>Tips to improve</h4>
-                    <ul id="tips-list">
-                        <li>Get your whole body inside the frame</li>
-                        <li>Light the room from the front, not behind you</li>
-                        <li>Stand against a plain background</li>
-                    </ul>
-                </div>
-
-                <div class="stats-section">
-                    <h4><i class="bi bi-graph-up"></i>This session</h4>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value" id="stat-reps">0</div>
-                            <div class="stat-label">Reps</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="stat-good">0</div>
-                            <div class="stat-label">Correct</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="stat-bad">0</div>
-                            <div class="stat-label">Off</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="stat-total">0</div>
-                            <div class="stat-label">Total</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="stat-accuracy">0%</div>
-                            <div class="stat-label">Accuracy</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Loading Overlay -->
-        <div class="loading-overlay hidden" id="loading-overlay">
-            <div class="spinner"></div>
-            <p id="loading-message">Loading model...</p>
+            <nav class="tab-rail" role="tablist">
+                <button class="tab active" data-view="train" role="tab" aria-selected="true">
+                    <i class="bi bi-lightning-charge-fill"></i>Train
+                </button>
+                <button class="tab" data-view="history" role="tab" aria-selected="false">
+                    <i class="bi bi-clock-history"></i>History
+                    <span class="tab-badge" id="tab-history-count">0</span>
+                </button>
+                <button class="tab" data-view="progress" role="tab" aria-selected="false">
+                    <i class="bi bi-graph-up-arrow"></i>Progress
+                </button>
+            </nav>
         </div>
+    </header>
+
+    <main class="container">
+
+        <!-- ================================================================
+             VIEW 1 — TRAIN
+             ================================================================ -->
+        <div class="view" id="view-train">
+
+            <!-- Hero -->
+            <section class="header">
+                <h1><span class="hero-kicker">Shape your</span>Form</h1>
+                <p class="subtitle">Point a camera at your lift. The model reads your joints, counts your reps, and
+                    tells you what to fix while you are still moving.</p>
+                <div class="hero-chips">
+                    <span class="hero-chip"><i class="bi bi-lightning-charge-fill"></i>5 exercises</span>
+                    <span class="hero-chip"><i class="bi bi-broadcast"></i>Live, video or photo</span>
+                    <span class="hero-chip"><i class="bi bi-shield-check"></i>Runs in your browser</span>
+                    <span class="hero-chip"><i class="bi bi-bar-chart-line-fill"></i>Every session saved</span>
+                </div>
+            </section>
+
+            <!-- Step 1: Exercise Selection -->
+            <section class="section" id="exercise-selection">
+                <span class="eyebrow"><span class="step-dot">1</span>Step one</span>
+                <h2>Pick your move</h2>
+                <p class="section-lead">Each exercise loads its own model, so choose the lift you are about to
+                    perform.</p>
+
+                <div class="exercise-grid">
+                    <button type="button" class="exercise-card" data-exercise="squat">
+                        <span class="exercise-icon"><i class="bi bi-person-standing"></i></span>
+                        <span class="exercise-name">Squat</span>
+                        <span class="exercise-meta">Back and leg analysis</span>
+                        <span class="exercise-pb hidden" data-pb="squat"></span>
+                    </button>
+
+                    <button type="button" class="exercise-card" data-exercise="lunge">
+                        <span class="exercise-icon"><i class="bi bi-person-walking"></i></span>
+                        <span class="exercise-name">Lunge</span>
+                        <span class="exercise-meta">Leg and balance analysis</span>
+                        <span class="exercise-pb hidden" data-pb="lunge"></span>
+                    </button>
+
+                    <button type="button" class="exercise-card" data-exercise="pushup">
+                        <span class="exercise-icon"><i class="bi bi-person-arms-up"></i></span>
+                        <span class="exercise-name">Push-up</span>
+                        <span class="exercise-meta">Arm and core analysis</span>
+                        <span class="exercise-pb hidden" data-pb="pushup"></span>
+                    </button>
+
+                    <button type="button" class="exercise-card" data-exercise="deadlift">
+                        <span class="exercise-icon"><i class="bi bi-arrow-bar-up"></i></span>
+                        <span class="exercise-name">Deadlift</span>
+                        <span class="exercise-meta">Back and hip analysis</span>
+                        <span class="exercise-pb hidden" data-pb="deadlift"></span>
+                    </button>
+
+                    <button type="button" class="exercise-card" data-exercise="bicep_curl">
+                        <span class="exercise-icon"><i class="bi bi-arrow-repeat"></i></span>
+                        <span class="exercise-name">Bicep curl</span>
+                        <span class="exercise-meta">Arm and back analysis</span>
+                        <span class="exercise-pb hidden" data-pb="bicep_curl"></span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 2: Input Mode Selection -->
+            <section class="section hidden" id="input-mode-selection">
+                <span class="eyebrow"><span class="step-dot">2</span>Step two</span>
+                <h2>Choose your input</h2>
+                <p class="section-lead">Work live from your camera, or upload something you already recorded.</p>
+
+                <div class="mode-buttons">
+                    <button class="mode-btn mode-btn--live" id="webcam-btn">
+                        <span class="mode-icon"><i class="bi bi-camera-video-fill"></i></span>
+                        <span class="mode-name">Webcam</span>
+                        <span class="mode-desc">Live feedback while you move</span>
+                        <span class="mode-go" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+                    </button>
+
+                    <button class="mode-btn mode-btn--clip" id="video-btn">
+                        <span class="mode-icon"><i class="bi bi-film"></i></span>
+                        <span class="mode-name">Video</span>
+                        <span class="mode-desc">Upload a clip and review every rep</span>
+                        <span class="mode-go" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+                    </button>
+
+                    <button class="mode-btn mode-btn--still" id="image-btn">
+                        <span class="mode-icon"><i class="bi bi-image-fill"></i></span>
+                        <span class="mode-name">Photo</span>
+                        <span class="mode-desc">Check a single position in detail</span>
+                        <span class="mode-go" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 3: Analysis Interface -->
+            <section class="hidden" id="analysis-section">
+
+                <div class="stage">
+                    <div class="stage-head">
+                        <div class="stage-title">
+                            <i class="bi bi-person-standing" id="stage-exercise-icon"></i>
+                            <span id="stage-exercise-name">Squat</span>
+                        </div>
+                        <div class="stage-title hidden" id="stage-live">
+                            <span class="live-dot"></span>
+                            <span id="stage-timer">00:00</span>
+                        </div>
+                    </div>
+
+                    <!-- Webcam Mode -->
+                    <div id="webcam-mode" class="hidden">
+                        <div class="video-container">
+                            <video id="webcam" autoplay playsinline muted></video>
+                            <canvas id="output-canvas"></canvas>
+                            <div class="rep-counter-overlay" id="rep-counter-overlay">
+                                <div class="rep-number">0</div>
+                                <div class="rep-label">Reps</div>
+                            </div>
+                        </div>
+
+                        <div class="controls">
+                            <button id="start-webcam" class="btn btn-success"><i class="bi bi-play-fill"></i>Start
+                                camera</button>
+                            <button id="stop-webcam" class="btn btn-danger hidden"><i class="bi bi-stop-fill"></i>Stop
+                                camera</button>
+                            <button id="reset-reps" class="btn btn-warning hidden"><i
+                                    class="bi bi-arrow-counterclockwise"></i>Reset reps</button>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="show-landmarks" checked>
+                                Show landmarks
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Video Upload Mode -->
+                    <div id="video-mode" class="hidden">
+                        <div class="upload-area" id="upload-area">
+                            <div class="upload-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+                            <p>Drop a video here, or click to browse</p>
+                            <p class="upload-hint">MP4, AVI or MOV, up to 100 MB</p>
+                            <input type="file" id="video-input" accept="video/*" hidden>
+                        </div>
+
+                        <div class="video-preview hidden" id="video-preview">
+                            <div class="video-display-container">
+                                <video id="preview-video" muted playsinline></video>
+                                <canvas id="video-output-canvas"></canvas>
+                                <div class="rep-counter-overlay" id="video-rep-counter-overlay">
+                                    <div class="rep-number">0</div>
+                                    <div class="rep-label">Reps</div>
+                                </div>
+                            </div>
+
+                            <div class="video-controls">
+                                <button id="analyze-video" class="btn btn-primary"><i class="bi bi-play-fill"></i>Start
+                                    analysis</button>
+                                <button id="pause-video" class="btn btn-warning hidden"><i
+                                        class="bi bi-pause-fill"></i>Pause</button>
+                                <button id="resume-video" class="btn btn-success hidden"><i
+                                        class="bi bi-play-fill"></i>Resume</button>
+                                <button id="stop-video" class="btn btn-danger hidden"><i
+                                        class="bi bi-stop-fill"></i>Stop</button>
+                                <button id="upload-another-video" class="btn btn-secondary hidden"><i
+                                        class="bi bi-arrow-repeat"></i>Upload another video</button>
+                            </div>
+
+                            <div class="video-progress hidden" id="video-progress">
+                                <div class="progress-info">
+                                    <span id="progress-text">Processing: 0%</span>
+                                    <span id="progress-frames">Frame: 0 / 0</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="video-progress-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="video-results" class="hidden"></div>
+                    </div>
+
+                    <!-- Image Upload Mode -->
+                    <div id="image-mode" class="hidden">
+                        <div class="upload-area" id="image-upload-area">
+                            <div class="upload-icon"><i class="bi bi-image-fill"></i></div>
+                            <p>Drop a photo here, or click to browse</p>
+                            <p class="upload-hint">JPG or PNG, up to 10 MB</p>
+                            <input type="file" id="image-input" accept="image/*" hidden>
+                        </div>
+
+                        <div class="image-preview hidden" id="image-preview">
+                            <div class="image-comparison">
+                                <div class="image-box">
+                                    <h4>Original</h4>
+                                    <img id="original-image" alt="Uploaded photo">
+                                </div>
+                                <div class="image-box">
+                                    <h4>Analysed</h4>
+                                    <canvas id="analyzed-image"></canvas>
+                                </div>
+                            </div>
+
+                            <div class="image-controls">
+                                <button id="analyze-image" class="btn btn-primary"><i
+                                        class="bi bi-crosshair"></i>Analyse posture</button>
+                                <button id="upload-another" class="btn btn-secondary"><i
+                                        class="bi bi-arrow-repeat"></i>Upload another</button>
+                            </div>
+                        </div>
+
+                        <div id="image-results" class="hidden">
+                            <h3>Posture breakdown</h3>
+                            <div class="analysis-grid">
+                                <div class="analysis-card">
+                                    <div class="analysis-icon"><i class="bi bi-rulers"></i></div>
+                                    <div class="analysis-content">
+                                        <h4>Knee angle</h4>
+                                        <p class="analysis-value" id="knee-angle-value">-</p>
+                                        <p class="analysis-detail">Left <span id="left-knee">-</span>&deg; &middot;
+                                            Right <span id="right-knee">-</span>&deg;</p>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-card">
+                                    <div class="analysis-icon"><i class="bi bi-triangle"></i></div>
+                                    <div class="analysis-content">
+                                        <h4>Hip angle</h4>
+                                        <p class="analysis-value" id="hip-angle-value">-</p>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-card">
+                                    <div class="analysis-icon"><i class="bi bi-arrow-down-short"></i></div>
+                                    <div class="analysis-content">
+                                        <h4>Depth</h4>
+                                        <p class="analysis-value" id="depth-value">-</p>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-card">
+                                    <div class="analysis-icon"><i class="bi bi-arrows"></i></div>
+                                    <div class="analysis-content">
+                                        <h4>Stance width</h4>
+                                        <p class="analysis-value" id="stance-value">-</p>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-card">
+                                    <div class="analysis-icon"><i class="bi bi-align-end"></i></div>
+                                    <div class="analysis-content">
+                                        <h4>Back position</h4>
+                                        <p class="analysis-value" id="back-lean-value">-</p>
+                                        <p class="analysis-detail">Lean <span id="lean-amount">-</span>%</p>
+                                    </div>
+                                </div>
+
+                                <div class="analysis-card">
+                                    <div class="analysis-icon"><i class="bi bi-bullseye"></i></div>
+                                    <div class="analysis-content">
+                                        <h4>Overall form</h4>
+                                        <p class="analysis-value" id="overall-form">-</p>
+                                        <p class="analysis-detail">Confidence <span id="form-confidence">-</span>%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Panel -->
+                <aside class="status-panel" id="status-panel">
+                    <div class="status-header">
+                        <h3>Live status</h3>
+                        <span class="status-badge" id="status-badge">Waiting</span>
+                    </div>
+
+                    <div class="status-content">
+                        <div class="status-icon" id="status-icon"><i class="bi bi-hourglass-split"></i></div>
+                        <h4 id="status-message">Position yourself in frame</h4>
+                        <div class="confidence-bar">
+                            <div class="confidence-label">Confidence</div>
+                            <div class="confidence-progress">
+                                <div class="confidence-fill" id="confidence-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="confidence-value" id="confidence-value">0%</div>
+                        </div>
+                    </div>
+
+                    <div class="tips-section" id="tips-section">
+                        <h4><i class="bi bi-lightbulb-fill"></i>Tips to improve</h4>
+                        <ul id="tips-list">
+                            <li>Get your whole body inside the frame</li>
+                            <li>Light the room from the front, not behind you</li>
+                            <li>Stand against a plain background</li>
+                        </ul>
+                    </div>
+
+                    <div class="stats-section">
+                        <h4><i class="bi bi-graph-up"></i>This session</h4>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-reps">0</div>
+                                <div class="stat-label">Reps</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-good">0</div>
+                                <div class="stat-label">Correct</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-bad">0</div>
+                                <div class="stat-label">Off</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-total">0</div>
+                                <div class="stat-label">Total</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="stat-accuracy">0%</div>
+                                <div class="stat-label">Accuracy</div>
+                            </div>
+                        </div>
+
+                        <div class="session-actions">
+                            <button class="btn btn-primary btn-sm" id="finish-session">
+                                <i class="bi bi-check2-circle"></i>Finish &amp; save
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </section>
+        </div>
+
+        <!-- ================================================================
+             VIEW 2 — HISTORY
+             ================================================================ -->
+        <div class="view hidden" id="view-history">
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="panel-title"><i class="bi bi-clock-history"></i>Previous sessions</div>
+                        <p class="panel-sub" id="history-sub">Every set you have logged, newest first.</p>
+                    </div>
+                    <button class="btn btn-ghost btn-sm" id="clear-history">
+                        <i class="bi bi-trash3"></i>Clear history
+                    </button>
+                </div>
+
+                <div class="history-toolbar">
+                    <div class="filter-chips" id="history-filters">
+                        <button class="filter-chip active" data-filter="all">All</button>
+                        <button class="filter-chip" data-filter="squat">Squat</button>
+                        <button class="filter-chip" data-filter="lunge">Lunge</button>
+                        <button class="filter-chip" data-filter="pushup">Push-up</button>
+                        <button class="filter-chip" data-filter="deadlift">Deadlift</button>
+                        <button class="filter-chip" data-filter="bicep_curl">Bicep curl</button>
+                    </div>
+                </div>
+
+                <div class="session-list" id="session-list"></div>
+
+                <div class="empty-state hidden" id="history-empty">
+                    <div class="empty-icon"><i class="bi bi-clipboard-pulse"></i></div>
+                    <h3>No sessions yet</h3>
+                    <p>Run a set from the Train tab. When you stop the camera, the session lands here with your reps,
+                        accuracy and the faults you hit.</p>
+                    <button class="btn btn-success" data-goto="train"><i class="bi bi-lightning-charge-fill"></i>Start
+                        training</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================================================================
+             VIEW 3 — PROGRESS
+             ================================================================ -->
+        <div class="view hidden" id="view-progress">
+
+            <section class="hero-progress">
+                <div class="hero-progress-inner">
+                    <h2 id="progress-headline">Great work so far</h2>
+                    <p id="progress-subline">Your lifetime totals across every logged session.</p>
+
+                    <div class="headline-stats">
+                        <div class="headline-stat">
+                            <div class="headline-stat-label">Time</div>
+                            <div class="headline-stat-value" id="hs-time">0<small>min</small></div>
+                        </div>
+                        <div class="headline-stat">
+                            <div class="headline-stat-label">Reps</div>
+                            <div class="headline-stat-value" id="hs-reps">0</div>
+                        </div>
+                        <div class="headline-stat">
+                            <div class="headline-stat-label">Accuracy</div>
+                            <div class="headline-stat-value" id="hs-accuracy">0<small>%</small></div>
+                        </div>
+                        <div class="headline-stat">
+                            <div class="headline-stat-label">Sessions</div>
+                            <div class="headline-stat-value" id="hs-sessions">0</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="panel-grid">
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <div class="panel-title"><i class="bi bi-bar-chart-fill"></i>Rep volume</div>
+                            <p class="panel-sub" id="chart-sub">Reps completed per day</p>
+                        </div>
+                        <div class="segmented" id="range-toggle">
+                            <button data-range="week" class="active">Week</button>
+                            <button data-range="month">Month</button>
+                            <button data-range="year">Year</button>
+                        </div>
+                    </div>
+
+                    <div class="chart">
+                        <div class="chart-plot" id="volume-chart"></div>
+                    </div>
+
+                    <div class="chart-legend">
+                        <span class="legend-item"><span class="legend-swatch"></span>Reps completed</span>
+                        <span class="legend-item" id="chart-peak"></span>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <div class="panel-title"><i class="bi bi-bullseye"></i>Form accuracy</div>
+                            <p class="panel-sub">Share of reps flagged clean</p>
+                        </div>
+                    </div>
+
+                    <div class="ring-card">
+                        <div class="ring">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+                                <circle class="ring-fill" cx="60" cy="60" r="52" id="accuracy-ring"
+                                    stroke-dasharray="326.7" stroke-dashoffset="326.7"></circle>
+                            </svg>
+                            <div class="ring-center">
+                                <div class="ring-value" id="ring-value">0%</div>
+                                <div class="ring-caption">Clean reps</div>
+                            </div>
+                        </div>
+                        <p class="ring-note" id="ring-note">No reps logged yet.</p>
+                    </div>
+                </section>
+            </div>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="panel-title"><i class="bi bi-calendar3"></i>Training streak</div>
+                        <p class="panel-sub">The last 14 days. Filled squares are days you trained.</p>
+                    </div>
+                </div>
+                <div class="streak-strip" id="streak-strip"></div>
+            </section>
+
+            <div class="panel-grid">
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <div class="panel-title"><i class="bi bi-exclamation-triangle-fill"></i>Most common faults
+                            </div>
+                            <p class="panel-sub">What to work on next</p>
+                        </div>
+                    </div>
+                    <div class="fault-list" id="fault-list"></div>
+                    <div class="empty-state hidden" id="fault-empty">
+                        <div class="empty-icon"><i class="bi bi-emoji-smile"></i></div>
+                        <h3>Nothing flagged</h3>
+                        <p>No form faults logged yet. Run a session and this fills in with the mistakes worth fixing.</p>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <div class="panel-title"><i class="bi bi-list-nested"></i>By exercise</div>
+                            <p class="panel-sub">Reps and accuracy per lift</p>
+                        </div>
+                    </div>
+                    <div class="breakdown" id="exercise-breakdown"></div>
+                </section>
+            </div>
+
+            <div class="empty-state hidden" id="progress-empty">
+                <div class="empty-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                <h3>Nothing to chart yet</h3>
+                <p>Your analytics build from saved sessions. Finish one set and the charts on this tab come alive.</p>
+                <button class="btn btn-success" data-goto="train"><i class="bi bi-lightning-charge-fill"></i>Start
+                    training</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"><i class="bi bi-check-circle-fill"></i><span id="toast-text"></span></div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loading-overlay">
+        <div class="spinner"></div>
+        <p id="loading-message">Loading model...</p>
     </div>
 
     <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
