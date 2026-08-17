@@ -1,67 +1,93 @@
-# app.py - Landmark-based main application
+# app.py - ShapeForm web application
 # Location: project_root/app.py
 #
-# The browser runs MediaPipe pose detection and posts the 33 landmarks
-# to these endpoints. The server runs the trained classification model
+# The browser runs MediaPipe pose detection and posts the 33 landmarks to
+# the analysis endpoints. The server runs the trained classification model
 # on those landmarks. No server-side mediapipe, opencv, or background
 # threading, so this runs on PythonAnywhere.
+#
+# Structure:
+#   Pages      -> marketing site, exercise library, analyser, dashboard
+#   Analysis   -> /api/load_model, /api/analyze_frame, /api/analyze_image
+#   Sessions   -> /api/sessions (CRUD), /api/stats
+#
+# Predictors are imported lazily inside the factory below. Importing this
+# module therefore does not pull in TensorFlow, which keeps page loads
+# fast and means the site still serves if a model file is missing.
 
-from flask import Flask, render_template, request, jsonify
+from datetime import datetime, timezone
+from functools import wraps
 
-from exercises.squat.SquatPredictor import SquatPredictor
-from exercises.lunge.LungePredictor import LungePredictor
-from exercises.pushup.PushupPredictor import PushupPredictor
-from exercises.deadlift.DeadliftPredictor import DeadliftPredictor
-from exercises.bicep_curl.BicepCurlPredictor import BicepCurlPredictor
+from flask import (
+    Flask, g, jsonify, make_response, redirect,
+    render_template, request, url_for
+)
+
+import content
+import database
 
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-# Feedback messages configuration
-FEEDBACK_MESSAGES = {
-    'squat': {
-        'none': {'status': 'EXCELLENT FORM ✓', 'message': 'Perfect squat form!', 'tips': ['Keep back straight', 'Chest up', 'Knees aligned with toes', 'Great work!'], 'color': 'success'},
-        'extreme_backward_lean': {'status': 'BACK ISSUE ⚠', 'message': 'Do not lean backward', 'tips': ['Engage core muscles', 'Maintain neutral spine', 'Keep weight centered'], 'color': 'danger'},
-        'extreme_forward_lean': {'status': 'FORWARD LEAN ⚠', 'message': 'Do not lean too far forward', 'tips': ['Keep chest up', 'Look forward', 'Sit back into the squat'], 'color': 'warning'},
-        'foots_too_close': {'status': 'STANCE TOO NARROW ⚠', 'message': 'Widen your stance', 'tips': ['Feet shoulder-width apart', 'Toes slightly pointed out'], 'color': 'warning'},
-        'foots_too_far': {'status': 'STANCE TOO WIDE ⚠', 'message': 'Narrow your stance', 'tips': ['Bring feet closer', 'Maintain control'], 'color': 'warning'},
-        'unknown': {'status': 'UNCLEAR POSITION', 'message': 'Position yourself in frame', 'tips': ['Ensure full body visible', 'Stand in good lighting'], 'color': 'secondary'}
-    },
-    'lunge': {
-        'none': {'status': 'EXCELLENT FORM ✓', 'message': 'Perfect lunge form!', 'tips': ['Keep back straight', 'Front knee over ankle', 'Back knee bent', 'Great work!'], 'color': 'success'},
-        'extreme_backward_lean': {'status': 'BACK ISSUE ⚠', 'message': 'Do not lean backward', 'tips': ['Engage core muscles', 'Keep torso upright', 'Look forward'], 'color': 'danger'},
-        'extreme_forward_lean': {'status': 'FORWARD LEAN ⚠', 'message': 'Do not lean too far forward', 'tips': ['Keep chest up', 'Shoulders back', 'Stay vertical'], 'color': 'warning'},
-        'foots_too_close': {'status': 'STANCE TOO NARROW ⚠', 'message': 'Step further forward', 'tips': ['Increase stride length', 'Front foot should be forward'], 'color': 'warning'},
-        'foots_too_far': {'status': 'STANCE TOO WIDE ⚠', 'message': 'Reduce stride length', 'tips': ['Step closer', 'Maintain balance'], 'color': 'warning'},
-        'unknown': {'status': 'UNCLEAR POSITION', 'message': 'Position yourself in frame', 'tips': ['Ensure full body visible', 'Stand in good lighting'], 'color': 'secondary'}
-    },
-    'pushup': {
-        'none': {'status': 'EXCELLENT FORM ✓', 'message': 'Perfect push-up form!', 'tips': ['Elbows close to body', 'Straight back', 'Full range of motion', 'Great work!'], 'color': 'success'},
-        'hand_too_far_or_incorrect_position': {'status': 'HAND POSITION ⚠', 'message': 'Adjust hand placement', 'tips': ['Hands shoulder-width apart', 'Position under shoulders', 'Fingers forward'], 'color': 'warning'},
-        'hips_too_high': {'status': 'HIP POSITION ⚠', 'message': 'Lower your hips', 'tips': ['Maintain plank position', 'Keep core engaged', 'Straight line head to heels'], 'color': 'warning'},
-        'incorrect_leg_position': {'status': 'LEG ALIGNMENT ⚠', 'message': 'Check leg position', 'tips': ['Keep legs straight', 'Feet together', 'Toes on ground'], 'color': 'warning'},
-        'unknown': {'status': 'UNCLEAR POSITION', 'message': 'Position yourself in frame', 'tips': ['Ensure full body visible', 'Stand in good lighting'], 'color': 'secondary'}
-    },
-    'deadlift': {
-        'none': {'status': 'EXCELLENT FORM ✓', 'message': 'Perfect deadlift form!', 'tips': ['Neutral spine', 'Chest up', 'Hips and shoulders rise together', 'Great work!'], 'color': 'success'},
-        'back_arch_posture': {'status': 'BACK ARCH - CRITICAL ⚠', 'message': 'Keep spine neutral!', 'tips': ['Engage core', 'Chest up', 'Do not hyperextend back', 'Maintain neutral spine throughout'], 'color': 'danger'},
-        'hand_grip_width': {'status': 'GRIP WIDTH ⚠', 'message': 'Adjust hand position', 'tips': ['Hands shoulder-width or slightly wider', 'Arms straight', 'Grip outside knees'], 'color': 'warning'},
-        'leg_position_width': {'status': 'STANCE WIDTH ⚠', 'message': 'Adjust foot position', 'tips': ['Feet hip-width apart', 'Toes slightly out', 'Weight on mid-foot'], 'color': 'warning'},
-        'unknown': {'status': 'UNCLEAR POSITION', 'message': 'Position yourself in frame', 'tips': ['Ensure full body visible', 'Stand in good lighting'], 'color': 'secondary'}
-    },
-    'bicep_curl': {
-        'none': {'status': 'EXCELLENT FORM ✓', 'message': 'Perfect bicep curl form!', 'tips': ['Elbows stable', 'Controlled movement', 'No momentum', 'Great work!'], 'color': 'success'},
-        'back_too_backward_lean': {'status': 'BACKWARD LEAN ⚠', 'message': 'Do not lean backward!', 'tips': ['Engage core', 'Stand upright', 'No momentum', 'Control the weight'], 'color': 'danger'},
-        'back_too_forward_lean': {'status': 'FORWARD LEAN ⚠', 'message': 'Do not lean forward!', 'tips': ['Keep torso upright', 'Shoulders back', 'Engage core'], 'color': 'danger'},
-        'hand_position_too_close': {'status': 'HANDS TOO CLOSE ⚠', 'message': 'Widen your grip', 'tips': ['Hands shoulder-width apart', 'Natural grip width'], 'color': 'warning'},
-        'hand_position_too_wide': {'status': 'HANDS TOO WIDE ⚠', 'message': 'Narrow your grip', 'tips': ['Bring hands closer', 'Shoulder-width grip'], 'color': 'warning'},
-        'hand_above_near_head': {'status': 'OVER-CURLING ⚠', 'message': 'Do not curl too high', 'tips': ['Stop at shoulder level', 'Do not swing weights', 'Control the motion'], 'color': 'warning'},
-        'one_hand_up_other_down': {'status': 'ASYMMETRIC ⚠', 'message': 'Keep both hands level', 'tips': ['Curl both arms together', 'Maintain symmetry', 'Equal weight on both sides'], 'color': 'warning'},
-        'unknown': {'status': 'UNCLEAR POSITION', 'message': 'Position yourself in frame', 'tips': ['Ensure upper body visible', 'Stand in good lighting'], 'color': 'secondary'}
+DEVICE_COOKIE = 'shapeform_device'
+COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 2   # two years
+
+# Feedback copy is derived from the exercise library, so the coaching in
+# the app and the guidance on the site can never drift apart.
+FEEDBACK_MESSAGES = content.feedback_messages()
+
+
+# ---------------------------------------------------------------------------
+# Device identity
+# ---------------------------------------------------------------------------
+# There are no accounts. Each browser gets an anonymous ID in a cookie and
+# their sessions hang off that. It is the smallest thing that makes history
+# work across page loads without asking anyone to sign up.
+
+@app.before_request
+def attach_device_id():
+    g.device_id = request.cookies.get(DEVICE_COOKIE) or database.new_device_id()
+    g.device_is_new = request.cookies.get(DEVICE_COOKIE) != g.device_id
+
+
+@app.after_request
+def persist_device_id(response):
+    if getattr(g, 'device_is_new', False):
+        response.set_cookie(
+            DEVICE_COOKIE, g.device_id,
+            max_age=COOKIE_MAX_AGE, samesite='Lax', httponly=True
+        )
+    return response
+
+
+@app.context_processor
+def inject_globals():
+    """Everything the shared layout needs on every page."""
+    return {
+        'site_stats': content.site_stats(),
+        'nav_exercises': content.all_exercises(),
+        'safety_note': content.SAFETY_NOTE,
+        'current_year': datetime.now(timezone.utc).year,
+        'active_page': request.endpoint,
     }
-}
 
 
+def json_endpoint(fn):
+    """Turn an unhandled error into JSON rather than an HTML error page,
+    so the front end always gets something it can parse."""
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as exc:                      # noqa: BLE001
+            app.logger.exception('API error in %s', fn.__name__)
+            return jsonify({'success': False, 'error': str(exc)}), 500
+    return wrapper
+
+
+# ---------------------------------------------------------------------------
+# Landmark plumbing
+# ---------------------------------------------------------------------------
 class _Landmark:
     """Lightweight stand-in for a MediaPipe landmark, so the existing
     predictor and rep-counter code can access .x / .y / .z / .visibility
@@ -84,33 +110,45 @@ def _wrap_landmarks(raw):
 
 
 def get_predictor_for_exercise(exercise_type):
-    """Factory function to get the appropriate predictor"""
-    mapping = {
-        'squat': SquatPredictor,
-        'lunge': LungePredictor,
-        'pushup': PushupPredictor,
-        'deadlift': DeadliftPredictor,
-        'bicep_curl': BicepCurlPredictor,
-    }
-    cls = mapping.get(exercise_type)
-    return cls() if cls else None
+    """Factory for exercise predictors.
+
+    The imports are deliberately inside the function. TensorFlow is only
+    pulled in when someone actually starts an analysis, so serving the
+    marketing pages and the library costs nothing.
+    """
+    if exercise_type == 'squat':
+        from exercises.squat.SquatPredictor import SquatPredictor
+        return SquatPredictor()
+    if exercise_type == 'lunge':
+        from exercises.lunge.LungePredictor import LungePredictor
+        return LungePredictor()
+    if exercise_type == 'pushup':
+        from exercises.pushup.PushupPredictor import PushupPredictor
+        return PushupPredictor()
+    if exercise_type == 'deadlift':
+        from exercises.deadlift.DeadliftPredictor import DeadliftPredictor
+        return DeadliftPredictor()
+    if exercise_type == 'bicep_curl':
+        from exercises.bicep_curl.BicepCurlPredictor import BicepCurlPredictor
+        return BicepCurlPredictor()
+    return None
 
 
 # One predictor per exercise, cached inside each worker process.
-# This keeps the app working even if PythonAnywhere runs more than one
-# worker, because any worker can load the model it needs on demand.
 _predictors = {}
 
 
 def _get_or_load(exercise_type):
-    if not exercise_type:
+    if not exercise_type or exercise_type not in content.EXERCISES:
         return None
     predictor = _predictors.get(exercise_type)
     if predictor is None:
-        predictor = get_predictor_for_exercise(exercise_type)
-        if predictor is None:
+        try:
+            predictor = get_predictor_for_exercise(exercise_type)
+        except Exception:                              # noqa: BLE001
+            app.logger.exception('Could not construct predictor for %s', exercise_type)
             return None
-        if not predictor.load_model():
+        if predictor is None or not predictor.load_model():
             return None
         _predictors[exercise_type] = predictor
     return predictor
@@ -124,29 +162,100 @@ def _attach_feedback(result, exercise_type):
     return result
 
 
+# ---------------------------------------------------------------------------
+# Pages
+# ---------------------------------------------------------------------------
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template(
+        'index.html',
+        how_it_works=content.HOW_IT_WORKS,
+        features=content.FEATURES,
+        exercises=content.all_exercises(),
+        faq=content.FAQ[:5],
+    )
 
 
+@app.route('/analyze')
+def analyze():
+    return render_template('analyze.html', exercises=content.all_exercises())
+
+
+@app.route('/exercises')
+def exercise_library():
+    return render_template('exercises.html', exercises=content.all_exercises())
+
+
+@app.route('/exercises/<slug>')
+def exercise_detail(slug):
+    exercise = content.get_exercise(slug)
+    if not exercise:
+        return render_template('404.html'), 404
+
+    faults = [
+        {**fault, 'key': key}
+        for key, fault in exercise['faults'].items()
+        if key not in content.NON_FAULT_KEYS
+    ]
+    clean = exercise['faults'].get('none')
+
+    others = [e for e in content.all_exercises() if e['slug'] != slug][:3]
+    return render_template(
+        'exercise_detail.html',
+        exercise=exercise, faults=faults, clean=clean, others=others
+    )
+
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html', exercises=content.all_exercises())
+
+
+@app.route('/faq')
+def faq():
+    return render_template('faq.html', faq=content.FAQ)
+
+
+@app.route('/about')
+def about():
+    return render_template('about.html', features=content.FEATURES)
+
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+
+# Old bookmarks pointed at the tool on the site root.
+@app.route('/index.html')
+def legacy_index():
+    return redirect(url_for('analyze'), code=301)
+
+
+# ---------------------------------------------------------------------------
+# Analysis API
+# ---------------------------------------------------------------------------
 @app.route('/api/load_model', methods=['POST'])
+@json_endpoint
 def load_model():
     data = request.get_json(silent=True) or {}
     exercise_type = data.get('exercise_type')
 
     predictor = _get_or_load(exercise_type)
     if predictor is None:
-        return jsonify({'success': False, 'error': f'Could not load model for "{exercise_type}"'})
+        return jsonify({'success': False,
+                        'error': f'Could not load model for "{exercise_type}"'})
 
     predictor.reset_counter()
     return jsonify({
         'success': True,
-        'message': f'{exercise_type.title()} model ready',
+        'message': f'{content.EXERCISES[exercise_type]["name"]} model ready',
         'exercise': exercise_type
     })
 
 
 @app.route('/api/analyze_frame', methods=['POST'])
+@json_endpoint
 def analyze_frame():
     """Webcam and video frames. Browser sends landmarks, server predicts
     and advances the rep counter."""
@@ -161,16 +270,12 @@ def analyze_frame():
         return jsonify({'success': False, 'error': 'No pose detected',
                         'message': 'Position yourself in frame'})
 
-    try:
-        result = predictor.analyze_landmarks(landmarks, count_rep=True)
-        return jsonify(_attach_feedback(result, exercise_type))
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)})
+    result = predictor.analyze_landmarks(landmarks, count_rep=True)
+    return jsonify(_attach_feedback(result, exercise_type))
 
 
 @app.route('/api/analyze_image', methods=['POST'])
+@json_endpoint
 def analyze_image():
     """Single still image. Browser sends landmarks, server predicts and
     returns the detailed analysis. Rep counter is not advanced."""
@@ -185,16 +290,12 @@ def analyze_image():
         return jsonify({'success': False, 'error': 'No pose detected',
                         'message': 'Ensure full body is visible in the image'})
 
-    try:
-        result = predictor.analyze_image_landmarks(landmarks)
-        return jsonify(_attach_feedback(result, exercise_type))
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)})
+    result = predictor.analyze_image_landmarks(landmarks)
+    return jsonify(_attach_feedback(result, exercise_type))
 
 
 @app.route('/api/reset_counter', methods=['POST'])
+@json_endpoint
 def reset_counter():
     data = request.get_json(silent=True) or {}
     exercise_type = data.get('exercise_type')
@@ -207,15 +308,96 @@ def reset_counter():
     return jsonify({'success': True, 'message': 'Rep counter reset', 'rep_count': 0})
 
 
+# ---------------------------------------------------------------------------
+# Sessions API
+# ---------------------------------------------------------------------------
+@app.route('/api/sessions', methods=['GET'])
+@json_endpoint
+def list_sessions():
+    exercise = request.args.get('exercise')
+    sessions = database.list_sessions(g.device_id, exercise=exercise)
+    return jsonify({'success': True, 'sessions': sessions, 'count': len(sessions)})
+
+
+@app.route('/api/sessions', methods=['POST'])
+@json_endpoint
+def create_session():
+    data = request.get_json(silent=True) or {}
+
+    if data.get('exercise') not in content.EXERCISES:
+        return jsonify({'success': False, 'error': 'Unknown exercise'}), 400
+    if not int(data.get('reps') or 0) > 0:
+        return jsonify({'success': False, 'error': 'A session needs at least one rep'}), 400
+
+    session = database.create_session(g.device_id, data)
+    return jsonify({'success': True, 'session': session}), 201
+
+
+@app.route('/api/sessions/<session_id>', methods=['DELETE'])
+@json_endpoint
+def remove_session(session_id):
+    ok = database.delete_session(g.device_id, session_id)
+    if not ok:
+        return jsonify({'success': False, 'error': 'Session not found'}), 404
+    return jsonify({'success': True})
+
+
+@app.route('/api/sessions', methods=['DELETE'])
+@json_endpoint
+def remove_all_sessions():
+    removed = database.clear_sessions(g.device_id)
+    return jsonify({'success': True, 'removed': removed})
+
+
+@app.route('/api/stats', methods=['GET'])
+@json_endpoint
+def stats():
+    data = database.compute_stats(g.device_id)
+    # Attach display names so the front end does not need its own copy
+    # of the exercise library.
+    data['labels'] = {
+        slug: {'name': ex['name'], 'icon': ex['icon']}
+        for slug, ex in content.EXERCISES.items()
+    }
+    data['faultLabels'] = {
+        key: content.fault_label(slug, key)
+        for slug in content.EXERCISES
+        for key in content.EXERCISES[slug]['faults']
+    }
+    return jsonify({'success': True, 'stats': data})
+
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({
         'status': 'healthy',
-        'loaded_exercises': list(_predictors.keys())
+        'loaded_exercises': list(_predictors.keys()),
+        'available_exercises': content.EXERCISE_ORDER,
     })
+
+
+# ---------------------------------------------------------------------------
+# Errors
+# ---------------------------------------------------------------------------
+@app.errorhandler(404)
+def not_found(_e):
+    if request.path.startswith('/api/'):
+        return jsonify({'success': False, 'error': 'Not found'}), 404
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def server_error(_e):
+    if request.path.startswith('/api/'):
+        return jsonify({'success': False, 'error': 'Server error'}), 500
+    return render_template('500.html'), 500
+
+
+# Build the schema at import time so the WSGI server picks it up too.
+database.init_db()
 
 
 if __name__ == '__main__':
     # Local testing only. PythonAnywhere uses the WSGI file, not this block.
-    print("Starting Flask server. Visit: http://localhost:5000")
+    print('Starting Flask server. Visit: http://localhost:5000')
     app.run(debug=False, host='0.0.0.0', port=5000, threaded=True)
