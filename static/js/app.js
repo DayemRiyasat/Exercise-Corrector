@@ -1,18 +1,14 @@
 // static/js/app.js
-// Front-end controller. Runs MediaPipe pose detection in the browser
-// (via pose_client.js), sends landmarks to the Flask backend, and logs
-// each finished set to the local session history.
+// Analyser page controller. Runs MediaPipe pose detection in the browser
+// (via pose_client.js), sends landmarks to the Flask backend, and posts
+// each finished set to the sessions API.
 
 import {
   initPose, detectImage, detectVideo,
   loadModel, analyzeFrame, analyzeImage, resetCounter
 } from './pose_client.js';
 
-import {
-  EXERCISE_META, faultLabel, formatClock,
-  loadSessions, saveSession, clearSessions,
-  renderRail, renderPersonalBests, renderHistory, renderProgress
-} from './history.js';
+import { postSession, fetchStats } from './api.js';
 
 // ---- Config ----
 const ANALYZE_INTERVAL_MS = 150;   // throttle server calls (~6-7 per second)
@@ -34,17 +30,17 @@ let videoRunning = false;
 let videoPaused = false;
 let lastAnalyze = 0;
 let lastTimestamp = 0;
-let historyFilter = 'all';
-let chartRange = 'week';
 let timerId = null;
+let faultLabels = {};
 
 const stats = { good: 0, bad: 0, total: 0, prevRep: 0, faults: {} };
 const session = { active: false, mode: null, exercise: null, startedAt: null, startMs: 0 };
 
-// ---- Small helpers ----
+// ---- Helpers ----
 const $ = (id) => document.getElementById(id);
 const show = (el) => el && el.classList.remove('hidden');
 const hide = (el) => el && el.classList.add('hidden');
+const toast = (msg, icon) => window.shapeform && window.shapeform.toast(msg, icon);
 
 function repCountFrom(repInfo) {
   if (!repInfo) return null;
@@ -60,79 +56,32 @@ function setLoading(on, msg) {
   on ? show(overlay) : hide(overlay);
 }
 
-let toastTimer = null;
-function toast(message, icon = 'bi-check-circle-fill') {
-  const el = $('toast');
-  $('toast-text').textContent = message;
-  el.querySelector('i').className = `bi ${icon}`;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3400);
+function formatClock(seconds) {
+  const s = Math.max(0, Math.round(seconds || 0));
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 
-// ---- View switching --------------------------------------------------------
-function switchView(name) {
-  document.querySelectorAll('.tab').forEach(tab => {
-    const on = tab.dataset.view === name;
-    tab.classList.toggle('active', on);
-    tab.setAttribute('aria-selected', String(on));
+// ---- Lifetime totals + personal bests -------------------------------------
+async function refreshTotals() {
+  const res = await fetchStats();
+  if (!res.success) return;
+  const s = res.stats;
+
+  faultLabels = s.faultLabels || {};
+  $('rail-sessions').textContent = s.sessions;
+  $('rail-reps').textContent = s.reps;
+  $('rail-streak').textContent = s.streak;
+
+  document.querySelectorAll('[data-pb]').forEach(el => {
+    const reps = (s.personalBests || {})[el.dataset.pb];
+    if (reps) {
+      el.innerHTML = `<i class="bi bi-trophy-fill"></i>Best ${reps} reps`;
+      el.classList.remove('hidden');
+    } else {
+      el.classList.add('hidden');
+    }
   });
-  ['train', 'history', 'progress'].forEach(v => {
-    $(`view-${v}`).classList.toggle('hidden', v !== name);
-  });
-
-  const sessions = loadSessions();
-  if (name === 'history') renderHistory(sessions, historyFilter);
-  if (name === 'progress') renderProgress(sessions, chartRange);
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => switchView(tab.dataset.view));
-});
-
-document.querySelectorAll('[data-goto]').forEach(btn => {
-  btn.addEventListener('click', () => switchView(btn.dataset.goto));
-});
-
-function refreshAll() {
-  const sessions = loadSessions();
-  renderRail(sessions);
-  renderPersonalBests(sessions);
-  renderHistory(sessions, historyFilter);
-  renderProgress(sessions, chartRange);
-}
-
-// History filters
-$('history-filters').addEventListener('click', (e) => {
-  const chip = e.target.closest('.filter-chip');
-  if (!chip) return;
-  historyFilter = chip.dataset.filter;
-  document.querySelectorAll('.filter-chip')
-    .forEach(c => c.classList.toggle('active', c === chip));
-  renderHistory(loadSessions(), historyFilter);
-});
-
-// Chart range
-$('range-toggle').addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-range]');
-  if (!btn) return;
-  chartRange = btn.dataset.range;
-  document.querySelectorAll('#range-toggle button')
-    .forEach(b => b.classList.toggle('active', b === btn));
-  renderProgress(loadSessions(), chartRange);
-});
-
-// Clear history
-$('clear-history').addEventListener('click', () => {
-  const count = loadSessions().length;
-  if (!count) { toast('No sessions to clear', 'bi-info-circle-fill'); return; }
-  if (!confirm(`Delete all ${count} saved session${count === 1 ? '' : 's'}? This cannot be undone.`)) return;
-  clearSessions();
-  refreshAll();
-  toast('History cleared', 'bi-trash3-fill');
-});
 
 // ---- Session lifecycle -----------------------------------------------------
 function startSession(mode) {
@@ -151,7 +100,7 @@ function startSession(mode) {
   }, 1000);
 }
 
-function endSession(announce = true) {
+async function endSession(announce = true) {
   clearInterval(timerId);
   hide($('stage-live'));
   if (!session.active) return;
@@ -164,8 +113,7 @@ function endSession(announce = true) {
   }
 
   const accuracy = Math.round((stats.good / stats.total) * 100);
-  saveSession({
-    id: `s_${session.startMs}_${Math.random().toString(36).slice(2, 7)}`,
+  const payload = {
     exercise: session.exercise,
     mode: session.mode,
     startedAt: session.startedAt,
@@ -173,30 +121,50 @@ function endSession(announce = true) {
     reps: stats.total,
     good: stats.good,
     bad: stats.bad,
-    accuracy,
     faults: { ...stats.faults }
-  });
+  };
 
-  refreshAll();
+  const res = await postSession(payload);
+
+  if (!res.success) {
+    if (announce) toast(res.error || 'Could not save this session', 'bi-exclamation-triangle-fill');
+    return;
+  }
+
+  refreshTotals();
   if (announce) {
     const top = Object.entries(stats.faults).sort((a, b) => b[1] - a[1])[0];
-    const note = top ? ` \u00b7 mostly ${faultLabel(top[0]).toLowerCase()}` : '';
+    const label = top ? (faultLabels[top[0]] || top[0].replace(/_/g, ' ')) : null;
+    const note = label ? ` \u00b7 mostly ${label.toLowerCase()}` : '';
     toast(`Saved: ${stats.total} reps, ${accuracy}% clean${note}`);
   }
 }
 
-$('finish-session').addEventListener('click', () => {
+$('finish-session').addEventListener('click', async () => {
   if (!session.active && stats.total < 1) {
     toast('Start a set first', 'bi-info-circle-fill');
     return;
   }
-  stopWebcam();
-  stopVideo();
-  switchView('history');
+  await stopWebcam();
+  await stopVideo();
+  window.location.href = '/dashboard';
 });
 
-// Save an in-flight session if the tab is closed mid-set.
-window.addEventListener('beforeunload', () => endSession(false));
+// A set in progress is still worth keeping if the tab closes.
+window.addEventListener('pagehide', () => {
+  if (!session.active || stats.total < 1) return;
+  const payload = JSON.stringify({
+    exercise: session.exercise,
+    mode: session.mode,
+    startedAt: session.startedAt,
+    durationSec: Math.round((Date.now() - session.startMs) / 1000),
+    reps: stats.total, good: stats.good, bad: stats.bad,
+    faults: { ...stats.faults }
+  });
+  // sendBeacon survives the page teardown that would kill a fetch.
+  navigator.sendBeacon('/api/sessions', new Blob([payload], { type: 'application/json' }));
+  session.active = false;
+});
 
 // ---- Status panel ----------------------------------------------------------
 const COLOR_MAP = {
@@ -219,8 +187,8 @@ function setStatusIcon(color) {
 }
 
 function updateStatus(result) {
+  const badge = $('status-badge');
   if (!result || !result.success) {
-    const badge = $('status-badge');
     badge.textContent = 'No pose';
     badge.style.backgroundColor = COLOR_MAP.secondary;
     $('status-message').textContent =
@@ -230,8 +198,8 @@ function updateStatus(result) {
     setStatusIcon('secondary');
     return;
   }
+
   const fb = result.feedback || {};
-  const badge = $('status-badge');
   badge.textContent = fb.status || result.prediction || '-';
   badge.style.backgroundColor = COLOR_MAP[fb.color] || COLOR_MAP.secondary;
   $('status-message').textContent = fb.message || '';
@@ -261,8 +229,8 @@ function updateReps(result, overlayId) {
     if (overlay) overlay.querySelector('.rep-number').textContent = count;
   }
 
-  // A completed rep is a rep-count increase. Classify it by the
-  // current prediction: 'none' means good form, anything else is a fault.
+  // A completed rep is a rep-count increase. Classify it by the current
+  // prediction: 'none' means good form, anything else is a fault.
   if (count > stats.prevRep) {
     const good = result.prediction === 'none';
     for (let i = stats.prevRep; i < count; i++) {
@@ -296,7 +264,7 @@ function resetStats() {
 }
 
 // ---- Landmark drawing ------------------------------------------------------
-function drawSkeleton(canvas, video, landmarks, showLm) {
+function drawSkeleton(canvas, mediaEl, landmarks, showLm) {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!showLm || !landmarks) return;
@@ -343,18 +311,23 @@ document.querySelectorAll('.exercise-card').forEach(card => {
     card.classList.add('selected');
     currentExercise = card.dataset.exercise;
 
-    const meta = EXERCISE_META[currentExercise] || {};
-    $('stage-exercise-name').textContent = meta.label || currentExercise;
-    $('stage-exercise-icon').className = `bi ${meta.icon || 'bi-activity'}`;
+    $('stage-exercise-name').textContent = card.dataset.name || currentExercise;
+    $('stage-exercise-icon').className = `bi ${card.dataset.icon || 'bi-activity'}`;
+    $('status-guide').href = `/exercises/${currentExercise}`;
+    $('status-guide').querySelector('span').textContent =
+      `Read the ${(card.dataset.name || '').toLowerCase()} form guide`;
 
     setLoading(true, 'Loading model...');
     if (!poseReady) {
       try { await initPose(); poseReady = true; }
-      catch (e) { setLoading(false); alert('Could not start pose detection: ' + e); return; }
+      catch (e) { setLoading(false); toast('Could not start pose detection', 'bi-exclamation-triangle-fill'); return; }
     }
     const res = await loadModel(currentExercise);
     setLoading(false);
-    if (!res.success) { alert(res.error || 'Model failed to load'); return; }
+    if (!res.success) {
+      toast(res.error || 'Model failed to load', 'bi-exclamation-triangle-fill');
+      return;
+    }
 
     show($('input-mode-selection'));
     $('input-mode-selection').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -365,8 +338,9 @@ $('webcam-btn').addEventListener('click', () => switchMode('webcam'));
 $('video-btn').addEventListener('click', () => switchMode('video'));
 $('image-btn').addEventListener('click', () => switchMode('image'));
 
-function switchMode(mode) {
-  stopWebcam(); stopVideo();
+async function switchMode(mode) {
+  await stopWebcam();
+  await stopVideo();
   show($('analysis-section'));
   ['webcam-mode', 'video-mode', 'image-mode'].forEach(id => hide($(id)));
   resetStats();
@@ -390,7 +364,10 @@ $('reset-reps').addEventListener('click', async () => {
 async function startWebcam() {
   try {
     webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
-  } catch (e) { alert('Camera access denied: ' + e); return; }
+  } catch (e) {
+    toast('Camera access denied', 'bi-camera-video-off-fill');
+    return;
+  }
 
   const video = $('webcam');
   video.srcObject = webcamStream;
@@ -405,7 +382,7 @@ async function startWebcam() {
   webcamLoop();
 }
 
-function stopWebcam() {
+async function stopWebcam() {
   const wasRunning = webcamRunning;
   webcamRunning = false;
   if (webcamStream) {
@@ -413,7 +390,7 @@ function stopWebcam() {
     webcamStream = null;
   }
   show($('start-webcam')); hide($('stop-webcam')); hide($('reset-reps'));
-  if (wasRunning) endSession(true);
+  if (wasRunning) await endSession(true);
 }
 
 async function webcamLoop() {
@@ -472,8 +449,8 @@ $('resume-video').addEventListener('click', () => {
   videoLoop();
 });
 $('stop-video').addEventListener('click', stopVideo);
-$('upload-another-video').addEventListener('click', () => {
-  stopVideo();
+$('upload-another-video').addEventListener('click', async () => {
+  await stopVideo();
   show($('upload-area')); hide($('video-preview'));
 });
 
@@ -489,14 +466,14 @@ async function startVideoAnalysis() {
   videoLoop();
 }
 
-function stopVideo() {
+async function stopVideo() {
   const wasRunning = videoRunning;
   videoRunning = false; videoPaused = false;
   const video = $('preview-video');
   if (video) video.pause();
   show($('analyze-video'));
   hide($('pause-video')); hide($('resume-video')); hide($('stop-video'));
-  if (wasRunning) endSession(true);
+  if (wasRunning) await endSession(true);
 }
 
 async function videoLoop() {
@@ -560,7 +537,6 @@ $('analyze-image').addEventListener('click', async () => {
     return;
   }
 
-  // Draw the skeleton onto the analyzed-image canvas
   const canvas = $('analyzed-image');
   sizeCanvasTo(canvas, img);
   const ctx = canvas.getContext('2d');
@@ -594,4 +570,4 @@ function populateImageResults(result) {
 }
 
 // ---- Boot ------------------------------------------------------------------
-refreshAll();
+refreshTotals();
