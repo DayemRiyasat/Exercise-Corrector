@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}{{ exercise.name }} form guide &middot; ShapeForm{% endblock %}
+{% block description %}{{ exercise.summary }}{% endblock %}
+
+{% block content %}
+
+<section class="page-head">
+    <div class="container">
+        <nav class="crumbs">
+            <a href="{{ url_for('exercise_library') }}">Library</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>{{ exercise.name }}</span>
+        </nav>
+
+        <div class="detail-head">
+            <span class="detail-icon"><i class="bi {{ exercise.icon }}"></i></span>
+            <div>
+                <h1>{{ exercise.name }}</h1>
+                <p class="page-lead">{{ exercise.summary }}</p>
+            </div>
+        </div>
+
+        <div class="page-head-stats">
+            <div class="head-stat">
+                <div class="head-stat-value">{{ exercise.difficulty }}</div>
+                <div class="head-stat-label">Difficulty</div>
+            </div>
+            <div class="head-stat">
+                <div class="head-stat-value">{{ exercise.pattern }}</div>
+                <div class="head-stat-label">Pattern</div>
+            </div>
+            <div class="head-stat">
+                <div class="head-stat-value">{{ exercise.fault_count }}</div>
+                <div class="head-stat-label">Faults tracked</div>
+            </div>
+            <a href="{{ url_for('analyze') }}" class="btn btn-success btn-sm head-stat-link">
+                <i class="bi bi-camera-video-fill"></i>Analyse this lift
+            </a>
+        </div>
+    </div>
+</section>
+
+<div class="container page-body">
+
+    <div class="detail-grid">
+        <div class="detail-main">
+
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="panel-title"><i class="bi bi-camera-video"></i>Camera position</div>
+                        <p class="panel-sub">Where to put the lens so the model can see what it needs</p>
+                    </div>
+                </div>
+                <p class="callout"><i class="bi bi-info-circle-fill"></i>{{ exercise.camera }}</p>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="panel-title"><i class="bi bi-1-circle"></i>Set up</div>
+                        <p class="panel-sub">Before the first rep</p>
+                    </div>
+                </div>
+                <ul class="check-list">
+                    {% for s in exercise.setup %}<li><i class="bi bi-check-circle-fill"></i>{{ s }}</li>{% endfor %}
+                </ul>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="panel-title"><i class="bi bi-2-circle"></i>Execute</div>
+                        <p class="panel-sub">What a clean rep looks like</p>
+                    </div>
+                </div>
+                <ol class="numbered-list">
+                    {% for s in exercise.execution %}<li><span>{{ loop.index }}</span>{{ s }}</li>{% endfor %}
+                </ol>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="panel-title"><i class="bi bi-exclamation-triangle-fill"></i>What the model flags</div>
+                        <p class="panel-sub">{{ exercise.fault_count }} faults, each with the cost and the fix</p>
+                    </div>
+                </div>
+
+                <div class="fault-cards">
+                    {% for f in faults %}
+                    <article class="fault-card fault-card--{{ f.color }}">
+                        <div class="fault-card-head">
+                            <h3>{{ f.label }}</h3>
+                            <span class="pill pill--{{ f.color }}">
+                                {% if f.color == 'danger' %}High risk{% else %}Correct it{% endif %}
+                            </span>
+                        </div>
+                        <p class="fault-why">{{ f.why }}</p>
+                        <p class="fault-fix"><i class="bi bi-wrench-adjustable"></i><span>{{ f.fix }}</span></p>
+                        <div class="fault-cues">
+                            {% for tip in f.tips %}<span class="pill pill--ghost">{{ tip }}</span>{% endfor %}
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+
+        <aside class="detail-side">
+            <div class="panel side-panel">
+                <div class="panel-title"><i class="bi bi-check-circle-fill"></i>A clean rep</div>
+                <p class="side-clean">{{ clean.why }}</p>
+                <ul class="cue-list">
+                    {% for tip in clean.tips %}<li><i class="bi bi-dot"></i>{{ tip }}</li>{% endfor %}
+                </ul>
+            </div>
+
+            <div class="panel side-panel">
+                <div class="panel-title"><i class="bi bi-bullseye"></i>Muscles worked</div>
+                <div class="tag-row">
+                    {% for m in exercise.muscles %}<span class="pill pill--soft">{{ m }}</span>{% endfor %}
+                </div>
+                <div class="side-spec">
+                    <span>Equipment</span><strong>{{ exercise.equipment }}</strong>
+                </div>
+            </div>
+
+            <div class="panel side-panel side-panel--cta">
+                <div class="panel-title"><i class="bi bi-camera-video-fill"></i>Ready to lift?</div>
+                <p>Load the {{ exercise.name|lower }} model and get corrections rep by rep.</p>
+                <a href="{{ url_for('analyze') }}" class="btn btn-success btn-sm">Start analysing</a>
+            </div>
+
+            <div class="panel side-panel">
+                <div class="panel-title"><i class="bi bi-arrow-left-right"></i>Other lifts</div>
+                <div class="side-links">
+                    {% for o in others %}
+                    <a href="{{ url_for('exercise_detail', slug=o.slug) }}">
+                        <i class="bi {{ o.icon }}"></i>{{ o.name }}<i class="bi bi-arrow-right"></i>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+{% endblock %}

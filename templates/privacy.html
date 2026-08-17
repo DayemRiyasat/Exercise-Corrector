@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy &middot; ShapeForm{% endblock %}
+{% block description %}What ShapeForm stores, what it never sees, and how to delete everything.{% endblock %}
+
+{% block content %}
+
+<section class="page-head">
+    <div class="container">
+        <span class="eyebrow eyebrow--light"><span class="eyebrow-dot"></span>Privacy</span>
+        <h1>What is stored, and what never is</h1>
+        <p class="page-lead">Short version: your video stays on your device, and your history is tied to an
+            anonymous cookie you can clear at any time.</p>
+    </div>
+</section>
+
+<div class="container container--narrow page-body">
+
+    <section class="panel">
+        <div class="panel-title"><i class="bi bi-eye-slash"></i>What never leaves your device</div>
+        <ul class="check-list">
+            <li><i class="bi bi-check-circle-fill"></i>Your webcam stream</li>
+            <li><i class="bi bi-check-circle-fill"></i>Any video file you upload for analysis</li>
+            <li><i class="bi bi-check-circle-fill"></i>Any photo you upload for analysis</li>
+        </ul>
+        <p class="panel-note">Pose detection runs in your browser. Files you select are read locally and are never
+            transmitted.</p>
+    </section>
+
+    <section class="panel">
+        <div class="panel-title"><i class="bi bi-upload"></i>What is sent to the server</div>
+        <ul class="check-list">
+            <li><i class="bi bi-check-circle-fill"></i>{{ site_stats.landmarks }} joint coordinates per analysed
+                frame, as plain numbers</li>
+            <li><i class="bi bi-check-circle-fill"></i>Which exercise you selected</li>
+            <li><i class="bi bi-check-circle-fill"></i>When you finish a set: its duration, rep count, clean-rep
+                count and fault tally</li>
+        </ul>
+        <p class="panel-note">Coordinates are used to run the classifier for that frame and are not written to
+            disk.</p>
+    </section>
+
+    <section class="panel">
+        <div class="panel-title"><i class="bi bi-person-badge"></i>How you are identified</div>
+        <p>You are not asked for a name, an email or a password. On your first visit the server sets a cookie
+            containing a random ID, and your saved sessions are attached to that ID. It identifies a browser, not a
+            person.</p>
+        <p class="panel-note">Clearing your cookies, or using a private window, gives you a clean slate. Deleting
+            your history from the dashboard removes the stored rows entirely.</p>
+    </section>
+
+    <section class="panel side-panel--cta contact-panel">
+        <div class="panel-title"><i class="bi bi-trash3"></i>Delete everything</div>
+        <p>Clear history on the dashboard wipes every session stored against your browser's ID.</p>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-success btn-sm">Open dashboard<i
+                class="bi bi-arrow-right"></i></a>
+    </section>
+</div>
+
+{% endblock %}

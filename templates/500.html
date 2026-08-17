@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Something broke &middot; ShapeForm{% endblock %}
+
+{% block content %}
+<div class="container page-body">
+    <div class="error-page">
+        <span class="error-code">500</span>
+        <h1>Something broke on our side</h1>
+        <p>The request did not complete. Try again, and if it keeps happening the analyser usually recovers after a reload.</p>
+        <div class="hero-actions hero-actions--center">
+            <a href="{{ url_for('index') }}" class="btn btn-success"><i class="bi bi-house-fill"></i>Back home</a>
+            <a href="{{ url_for('analyze') }}" class="btn btn-secondary"><i class="bi bi-arrow-clockwise"></i>Reload the analyser</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
