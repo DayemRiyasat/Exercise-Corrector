@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Exercise library &middot; ShapeForm{% endblock %}
+{% block description %}Setup cues, execution notes and every form fault the model can name, for all {{ site_stats.exercises }} exercises.{% endblock %}
+
+{% block content %}
+
+<section class="page-head">
+    <div class="container">
+        <span class="eyebrow eyebrow--light"><span class="eyebrow-dot"></span>Library</span>
+        <h1>Exercise library</h1>
+        <p class="page-lead">Every lift the system models, with the camera angle it expects, the cues that matter, and
+            the exact faults it will call out. {{ site_stats.faults }} faults documented across
+            {{ site_stats.exercises }} exercises.</p>
+    </div>
+</section>
+
+<div class="container page-body">
+    <div class="library-list">
+        {% for ex in exercises %}
+        <article class="library-row" data-reveal style="--delay: {{ loop.index0 * 70 }}ms">
+            <div class="library-row-head">
+                <span class="library-icon"><i class="bi {{ ex.icon }}"></i></span>
+                <div>
+                    <h2><a href="{{ url_for('exercise_detail', slug=ex.slug) }}">{{ ex.name }}</a></h2>
+                    <p class="library-row-tag">{{ ex.tagline }}</p>
+                </div>
+            </div>
+
+            <p class="library-row-summary">{{ ex.summary }}</p>
+
+            <div class="spec-row">
+                <div class="spec"><span class="spec-label">Difficulty</span><span class="spec-value">{{ ex.difficulty }}</span></div>
+                <div class="spec"><span class="spec-label">Pattern</span><span class="spec-value">{{ ex.pattern }}</span></div>
+                <div class="spec"><span class="spec-label">Equipment</span><span class="spec-value">{{ ex.equipment }}</span></div>
+                <div class="spec"><span class="spec-label">Faults tracked</span><span class="spec-value">{{ ex.fault_count }}</span></div>
+            </div>
+
+            <div class="tag-row">
+                {% for m in ex.muscles %}<span class="pill pill--soft">{{ m }}</span>{% endfor %}
+            </div>
+
+            <div class="library-row-actions">
+                <a href="{{ url_for('exercise_detail', slug=ex.slug) }}" class="btn btn-secondary btn-sm">
+                    Full guide<i class="bi bi-arrow-right"></i>
+                </a>
+                <a href="{{ url_for('analyze') }}" class="btn btn-success btn-sm">
+                    <i class="bi bi-camera-video-fill"></i>Analyse this lift
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,171 @@
+{# templates/_illustrations.html
+   Location: project_root/templates/_illustrations.html
+
+   Flat vector illustrations used on the landing page. They are inline SVG
+   rather than image files so they inherit the palette from style.css and
+   stay crisp at any size, with nothing extra to upload or cache.
+
+   Every shape uses a class (.ill-*) instead of a hard-coded fill, so
+   changing the accent in :root recolours all of them at once. #}
+
+{% macro feature_art(kind) %}
+<div class="feature-art" aria-hidden="true">
+  {% if kind == 'timing' %}
+  {# Correction arriving mid-set: a rep timeline with a live marker. #}
+  <svg viewBox="0 0 320 180" role="presentation">
+    <rect class="ill-soft" x="20" y="118" width="280" height="10" rx="5" />
+    <rect class="ill-accent" x="20" y="118" width="176" height="10" rx="5" />
+    {% for i in range(7) %}
+    <circle class="{{ 'ill-ink' if i < 4 else 'ill-line-fill' }}" cx="{{ 32 + i * 42 }}" cy="123" r="7" />
+    {% endfor %}
+    <rect class="ill-ink" x="120" y="34" width="152" height="54" rx="16" />
+    <circle class="ill-accent-on-dark" cx="144" cy="61" r="9" />
+    <rect class="ill-bar-light" x="162" y="50" width="88" height="8" rx="4" />
+    <rect class="ill-bar-dim" x="162" y="66" width="58" height="8" rx="4" />
+    <path class="ill-stroke-accent" d="M196 88 L196 112" />
+    <text class="ill-num" x="40" y="66">1.2s</text>
+  </svg>
+
+  {% elif kind == 'privacy' %}
+  {# Frames stay on the device; only coordinates cross the boundary. #}
+  <svg viewBox="0 0 320 180" role="presentation">
+    <rect class="ill-soft" x="26" y="26" width="128" height="128" rx="22" />
+    <rect class="ill-ink" x="46" y="44" width="88" height="92" rx="12" />
+    <circle class="ill-accent-on-dark" cx="90" cy="82" r="15" />
+    <rect class="ill-bar-light" x="66" y="106" width="48" height="7" rx="3.5" />
+    <path class="ill-dash" d="M166 90 H286" />
+    {% for i in range(4) %}
+    <circle class="ill-accent" cx="{{ 180 + i * 32 }}" cy="90" r="5" />
+    {% endfor %}
+    <rect class="ill-accent" x="238" y="40" width="56" height="34" rx="12" />
+    <path class="ill-stroke-white" d="M254 57 l7 7 l13 -14" />
+    <text class="ill-label" x="166" y="126">x, y, z only</text>
+  </svg>
+
+  {% elif kind == 'counting' %}
+  {# Reps counted from range of motion, not a timer. #}
+  <svg viewBox="0 0 320 180" role="presentation">
+    {% for i, h in [(0, 34), (1, 58), (2, 44), (3, 76), (4, 62), (5, 92)] %}
+    <rect class="{{ 'ill-accent' if i == 5 else 'ill-soft' }}" x="{{ 24 + i * 30 }}" y="{{ 136 - h }}"
+      width="18" height="{{ h }}" rx="9" />
+    {% endfor %}
+    <rect class="ill-ink" x="212" y="42" width="86" height="86" rx="24" />
+    <text class="ill-big" x="255" y="98">12</text>
+    <text class="ill-label-dim" x="255" y="118">REPS</text>
+  </svg>
+
+  {% elif kind == 'history' %}
+  {# Sessions stacking up over time. #}
+  <svg viewBox="0 0 320 180" role="presentation">
+    <rect class="ill-soft" x="52" y="118" width="216" height="34" rx="14" />
+    <rect class="ill-line-fill" x="40" y="86" width="240" height="38" rx="15" />
+    <rect class="ill-ink" x="28" y="42" width="264" height="52" rx="18" />
+    <circle class="ill-accent-on-dark" cx="58" cy="68" r="11" />
+    <rect class="ill-bar-light" x="82" y="56" width="104" height="8" rx="4" />
+    <rect class="ill-bar-dim" x="82" y="72" width="66" height="8" rx="4" />
+    <rect class="ill-accent" x="222" y="56" width="48" height="24" rx="12" />
+    <text class="ill-pill" x="246" y="72">92%</text>
+  </svg>
+
+  {% elif kind == 'library' %}
+  {# Every flag comes with a reason and a fix. #}
+  <svg viewBox="0 0 320 180" role="presentation">
+    <rect class="ill-soft" x="42" y="22" width="180" height="136" rx="18" />
+    <rect class="ill-accent" x="42" y="22" width="7" height="136" rx="3.5" />
+    <rect class="ill-bar-ink" x="68" y="48" width="112" height="10" rx="5" />
+    <rect class="ill-bar-line" x="68" y="72" width="132" height="8" rx="4" />
+    <rect class="ill-bar-line" x="68" y="90" width="98" height="8" rx="4" />
+    <rect class="ill-bar-line" x="68" y="108" width="120" height="8" rx="4" />
+    <circle class="ill-ink" cx="232" cy="120" r="34" />
+    <path class="ill-stroke-white-lg" d="M218 120 l10 11 l19 -22" />
+  </svg>
+
+  {% else %}
+  {# Runs in a browser tab, nothing to install. #}
+  <svg viewBox="0 0 320 180" role="presentation">
+    <rect class="ill-ink" x="30" y="30" width="260" height="120" rx="18" />
+    <rect class="ill-bar-dim" x="30" y="30" width="260" height="26" rx="18" />
+    <rect class="ill-bar-dim" x="30" y="46" width="260" height="10" />
+    {% for i in range(3) %}
+    <circle class="ill-dot" cx="{{ 50 + i * 16 }}" cy="43" r="4.5" />
+    {% endfor %}
+    <rect class="ill-bar-line" x="104" y="37" width="140" height="12" rx="6" />
+    <circle class="ill-accent" cx="160" cy="104" r="30" />
+    <path class="ill-stroke-white-lg" d="M152 93 L174 104 L152 115 Z" />
+  </svg>
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro hero_art() %}
+{# The product doing its job: a framed analyser view with the live form
+   report beside it. The readings mirror what the app actually reports. #}
+<div class="hero-art" aria-hidden="true">
+
+  <div class="device">
+    <div class="device-notch"></div>
+    <div class="device-screen">
+      <div class="device-chip">
+        <span class="device-chip-value">12</span>
+        <span class="device-chip-label">Reps</span>
+      </div>
+
+      <svg class="device-figure" viewBox="0 0 260 300" role="presentation">
+        <g class="pose-bones">
+          <line x1="124" y1="96" x2="100" y2="152" />
+          <line x1="124" y1="96" x2="150" y2="128" />
+          <line x1="150" y1="128" x2="169" y2="157" />
+          <line x1="100" y1="152" x2="138" y2="196" />
+          <line x1="138" y1="196" x2="112" y2="242" />
+          <line x1="112" y1="242" x2="142" y2="246" />
+        </g>
+        <circle class="pose-head" cx="130" cy="66" r="17" />
+        <g class="pose-joints">
+          <circle cx="124" cy="96" r="5.5" />
+          <circle cx="150" cy="128" r="5.5" />
+          <circle cx="169" cy="157" r="5.5" />
+          <circle cx="100" cy="152" r="5.5" />
+          <circle cx="138" cy="196" r="5.5" />
+          <circle cx="112" cy="242" r="5.5" />
+        </g>
+        <g class="pose-scan">
+          <line x1="30" y1="0" x2="30" y2="300" />
+        </g>
+      </svg>
+
+      <div class="device-verdict">
+        <span class="device-badge">Excellent form</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="report">
+    <div class="report-head">
+      <span class="report-pulse"></span>
+      <span>Generating form report</span>
+    </div>
+
+    <div class="report-row">
+      <span class="report-label">Knee angle</span>
+      <span class="report-value">96&deg;</span>
+    </div>
+    <div class="report-row">
+      <span class="report-label">Depth</span>
+      <span class="report-value">Below parallel</span>
+    </div>
+    <div class="report-row">
+      <span class="report-label">Back lean</span>
+      <span class="report-value">8&deg; forward</span>
+    </div>
+
+    <div class="report-foot">
+      <div class="report-track"><span style="width:94%"></span></div>
+      <span class="report-conf">94%</span>
+    </div>
+  </div>
+
+  <span class="hero-tag hero-tag--a"><i class="bi bi-check-lg"></i>Knees tracking</span>
+  <span class="hero-tag hero-tag--b"><i class="bi bi-broadcast"></i>33 joints</span>
+</div>
+{% endmacro %}

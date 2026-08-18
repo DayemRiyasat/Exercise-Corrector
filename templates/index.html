@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% from "_illustrations.html" import feature_art, hero_art %}
+
+{% block title %}ShapeForm &middot; Fix your form while you are still moving{% endblock %}
+{% block description %}ShapeForm watches your lift through any webcam, counts your reps and names the exact form fault it sees, in under a second. Five exercises, {{ site_stats.faults }} tracked faults, no account needed.{% endblock %}
+
+{% block content %}
+
+<!-- ====================================================================
+     Hero
+     ==================================================================== -->
+<section class="hero">
+    <div class="container hero-grid">
+        <div class="hero-copy">
+            <span class="eyebrow eyebrow--light"><span class="eyebrow-dot"></span>Real-time posture analysis</span>
+
+            <h1>
+                Move better,<br>
+                <em>lift better</em>
+            </h1>
+
+            <p class="hero-lead">
+                Transform your training with personalised form analysis. ShapeForm reads your joints
+                through any webcam, counts your reps, and names the exact fault it sees before you
+                start the next one.
+            </p>
+
+            <div class="hero-actions">
+                <a href="{{ url_for('analyze') }}" class="btn btn-success btn-lg">
+                    <i class="bi bi-camera-video-fill"></i>Start analysing
+                </a>
+                <a href="{{ url_for('exercise_library') }}" class="btn btn-secondary btn-lg">
+                    Browse the library
+                </a>
+            </div>
+
+            <div class="hero-chips">
+                <span class="hero-chip"><i class="bi bi-shield-lock"></i>Video never leaves your device</span>
+                <span class="hero-chip"><i class="bi bi-person-x"></i>No account</span>
+                <span class="hero-chip"><i class="bi bi-laptop"></i>Nothing to install</span>
+            </div>
+        </div>
+
+        {{ hero_art() }}
+    </div>
+</section>
+
+<!-- ====================================================================
+     Numbers
+     ==================================================================== -->
+<section class="stat-band">
+    <div class="container">
+        <div class="stat-band-grid">
+            <div class="band-stat">
+                <div class="band-value">{{ site_stats.exercises }}</div>
+                <div class="band-label">Exercises modelled</div>
+            </div>
+            <div class="band-stat">
+                <div class="band-value">{{ site_stats.landmarks }}</div>
+                <div class="band-label">Joints tracked per frame</div>
+            </div>
+            <div class="band-stat">
+                <div class="band-value">{{ site_stats.faults }}</div>
+                <div class="band-label">Named form faults</div>
+            </div>
+            <div class="band-stat">
+                <div class="band-value">~{{ site_stats.checks_per_second }}<span>/s</span></div>
+                <div class="band-label">Checks every second</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ====================================================================
+     How it works
+     ==================================================================== -->
+<section class="section-block" id="how-it-works">
+    <div class="container">
+        <div class="block-head block-head--center" data-reveal>
+            <span class="eyebrow"><span class="eyebrow-dot"></span>How it works</span>
+            <h2>How it works</h2>
+            <p class="block-lead">From opening the page to reading your first corrected set, in about
+                ninety seconds.</p>
+        </div>
+
+        <ol class="step-flow">
+            {% for step in how_it_works %}
+            <li class="step-card" data-reveal style="--delay: {{ loop.index0 * 90 }}ms">
+                <span class="step-icon"><i class="bi {{ step.icon }}"></i></span>
+                <h3>{{ step.title }}</h3>
+                <p>{{ step.body }}</p>
+                <span class="step-index">{{ loop.index }}</span>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>
+
+<!-- ====================================================================
+     Features
+     ==================================================================== -->
+<section class="section-block section-block--tint">
+    <div class="container">
+        <div class="block-head block-head--center" data-reveal>
+            <span class="eyebrow"><span class="eyebrow-dot"></span>Why it works</span>
+            <h2>Stop guessing at your form</h2>
+            <p class="block-lead">A few minutes a set is enough to catch the faults that quietly cost
+                you progress.</p>
+        </div>
+
+        <div class="feature-grid">
+            {% for f in features %}
+            <article class="feature-card" data-reveal style="--delay: {{ loop.index0 * 70 }}ms">
+                {{ feature_art(f.art) }}
+                <h3>{{ f.title }}</h3>
+                <p>{{ f.body }}</p>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- ====================================================================
+     Exercise library
+     ==================================================================== -->
+<section class="section-block">
+    <div class="container">
+        <div class="block-head block-head--center" data-reveal>
+            <span class="eyebrow"><span class="eyebrow-dot"></span>The library</span>
+            <h2>Five lifts, each with its own model</h2>
+            <p class="block-lead">Every fault the model can name is documented, with what it costs you
+                and how to fix it.</p>
+        </div>
+
+        <div class="library-grid">
+            {% for ex in exercises %}
+            <a class="library-card" href="{{ url_for('exercise_detail', slug=ex.slug) }}" data-reveal
+                style="--delay: {{ loop.index0 * 60 }}ms">
+                <span class="library-icon"><i class="bi {{ ex.icon }}"></i></span>
+                <h3>{{ ex.name }}</h3>
+                <p>{{ ex.tagline }}</p>
+                <div class="library-meta">
+                    <span class="pill pill--soft">{{ ex.difficulty }}</span>
+                    <span class="pill pill--ghost">{{ ex.fault_count }} faults</span>
+                </div>
+                <span class="library-go"><i class="bi bi-arrow-right"></i></span>
+            </a>
+            {% endfor %}
+        </div>
+
+        <div class="block-foot">
+            <a href="{{ url_for('exercise_library') }}" class="btn btn-secondary btn-lg">
+                View the full library<i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ====================================================================
+     Privacy
+     ==================================================================== -->
+<section class="section-block section-block--tint">
+    <div class="container">
+        <div class="split">
+            <div class="split-copy" data-reveal>
+                <span class="eyebrow"><span class="eyebrow-dot"></span>Privacy</span>
+                <h2>Your camera feed never gets uploaded</h2>
+                <p class="block-lead">
+                    Pose detection runs inside your browser. The server only ever receives a list of
+                    anonymous joint coordinates, which cannot be reconstructed into a picture of you
+                    or your room.
+                </p>
+                <ul class="check-list">
+                    <li><i class="bi bi-check-circle-fill"></i>Webcam frames and uploaded clips stay on your device</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Only {{ site_stats.landmarks }} x/y/z coordinates per
+                        frame are sent</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Sessions are tied to an anonymous cookie, not a name</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Clear your history from the dashboard at any time</li>
+                </ul>
+                <a href="{{ url_for('privacy') }}" class="btn btn-secondary">Read the privacy note<i
+                        class="bi bi-arrow-right"></i></a>
+            </div>
+
+            <div class="split-visual" data-reveal>
+                <div class="pipe-card">
+                    <div class="pipe-step">
+                        <span class="pipe-dot"><i class="bi bi-camera-video-fill"></i></span>
+                        <div>
+                            <h4>Your camera</h4>
+                            <p>Frames captured in the browser</p>
+                        </div>
+                        <span class="pipe-tag pipe-tag--local">On device</span>
+                    </div>
+                    <div class="pipe-line"></div>
+                    <div class="pipe-step">
+                        <span class="pipe-dot"><i class="bi bi-diagram-3-fill"></i></span>
+                        <div>
+                            <h4>Pose detection</h4>
+                            <p>MediaPipe extracts {{ site_stats.landmarks }} landmarks</p>
+                        </div>
+                        <span class="pipe-tag pipe-tag--local">On device</span>
+                    </div>
+                    <div class="pipe-line"></div>
+                    <div class="pipe-step">
+                        <span class="pipe-dot"><i class="bi bi-cpu-fill"></i></span>
+                        <div>
+                            <h4>Classification</h4>
+                            <p>Coordinates only, no imagery</p>
+                        </div>
+                        <span class="pipe-tag pipe-tag--server">Server</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ====================================================================
+     FAQ
+     ==================================================================== -->
+<section class="section-block">
+    <div class="container container--narrow">
+        <div class="block-head block-head--center" data-reveal>
+            <span class="eyebrow"><span class="eyebrow-dot"></span>FAQ</span>
+            <h2>FAQ</h2>
+            <p class="block-lead">Everything worth knowing before your first set.</p>
+        </div>
+
+        <div class="faq-list">
+            {% for item in faq %}
+            <details class="faq-item" {% if loop.first %}open{% endif %}>
+                <summary>{{ item.q }}<i class="bi bi-plus-lg"></i></summary>
+                <div class="faq-body">
+                    <p>{{ item.a }}</p>
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+
+        <div class="block-foot">
+            <a href="{{ url_for('faq') }}" class="btn btn-secondary">All questions<i
+                    class="bi bi-arrow-right"></i></a>
+        </div>
+    </div>
+</section>
+
+<!-- ====================================================================
+     Closing CTA
+     ==================================================================== -->
+<section class="cta-band">
+    <div class="container">
+        <div class="cta-inner">
+            <h2>Move better, lift better<br>with ShapeForm</h2>
+            <p>Start your first corrected set today. No sign-up, no install.</p>
+            <div class="hero-actions hero-actions--center">
+                <a href="{{ url_for('analyze') }}" class="btn btn-success btn-lg">
+                    <i class="bi bi-camera-video-fill"></i>Start analysing
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

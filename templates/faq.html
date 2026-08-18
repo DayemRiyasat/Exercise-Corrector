@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}FAQ &middot; ShapeForm{% endblock %}
+{% block description %}How the analysis works, what happens to your video, how accurate it is, and what it cannot do.{% endblock %}
+
+{% block content %}
+
+<section class="page-head">
+    <div class="container">
+        <span class="eyebrow eyebrow--light"><span class="eyebrow-dot"></span>FAQ</span>
+        <h1>Questions and answers</h1>
+        <p class="page-lead">How the analysis works, what happens to your footage, and where the limits are.</p>
+    </div>
+</section>
+
+<div class="container container--narrow page-body">
+    <div class="faq-list">
+        {% for item in faq %}
+        <details class="faq-item" {% if loop.first %}open{% endif %}>
+            <summary>{{ item.q }}<i class="bi bi-plus-lg"></i></summary>
+            <div class="faq-body">
+                <p>{{ item.a }}</p>
+            </div>
+        </details>
+        {% endfor %}
+    </div>
+
+    <section class="panel side-panel--cta contact-panel">
+        <div class="panel-title"><i class="bi bi-question-circle"></i>Still stuck?</div>
+        <p>The exercise library covers camera angles and cues for each lift in detail, which answers most of what
+            comes up mid-session.</p>
+        <a href="{{ url_for('exercise_library') }}" class="btn btn-success btn-sm">Open the library<i
+                class="bi bi-arrow-right"></i></a>
+    </section>
+</div>
+
+{% endblock %}

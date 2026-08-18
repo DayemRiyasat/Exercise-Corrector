@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Page not found &middot; ShapeForm{% endblock %}
+
+{% block content %}
+<div class="container page-body">
+    <div class="error-page">
+        <span class="error-code">404</span>
+        <h1>That page is not here</h1>
+        <p>The link may be out of date, or the exercise you asked for is not one we model.</p>
+        <div class="hero-actions hero-actions--center">
+            <a href="{{ url_for('index') }}" class="btn btn-success"><i class="bi bi-house-fill"></i>Back home</a>
+            <a href="{{ url_for('exercise_library') }}" class="btn btn-secondary"><i class="bi bi-book"></i>Exercise library</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
