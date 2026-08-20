@@ -229,27 +229,18 @@ function updateReps(result, overlayId) {
     if (overlay) overlay.querySelector('.rep-number').textContent = count;
   }
 
-  // A completed rep is a rep-count increase. The server grades the rep
-  // across all of its frames and reports rep_clean / dominant_fault, which
-  // is far more reliable than the prediction on the single frame where the
-  // counter happened to increment (that frame is the return to the start
-  // position, rarely where the fault was). Fall back to the instantaneous
-  // prediction if an older backend does not send the grade.
+  // A completed rep is a rep-count increase. Classify it by the current
+  // prediction: 'none' means good form, anything else is a fault.
   if (count > stats.prevRep) {
-    const info = result.rep_info || {};
-    const clean = typeof info.rep_clean === 'boolean'
-      ? info.rep_clean
-      : result.prediction === 'none';
-    const fault = info.dominant_fault
-      || (result.prediction !== 'none' ? result.prediction : 'unknown');
-
+    const good = result.prediction === 'none';
     for (let i = stats.prevRep; i < count; i++) {
       stats.total += 1;
-      if (clean) {
+      if (good) {
         stats.good += 1;
       } else {
         stats.bad += 1;
-        stats.faults[fault] = (stats.faults[fault] || 0) + 1;
+        const key = result.prediction || 'unknown';
+        stats.faults[key] = (stats.faults[key] || 0) + 1;
       }
     }
     stats.prevRep = count;
@@ -381,6 +372,16 @@ async function startWebcam() {
   const video = $('webcam');
   video.srcObject = webcamStream;
   await video.play();
+
+  // play() can resolve before the frame dimensions are known, which leaves
+  // the overlay canvas at its 300x150 default and puts the skeleton in the
+  // wrong place. Wait for the real dimensions before sizing it.
+  if (!video.videoWidth) {
+    await new Promise(resolve => {
+      video.addEventListener('loadedmetadata', resolve, { once: true });
+      setTimeout(resolve, 2000);        // never hang if the event is missed
+    });
+  }
   sizeCanvasTo($('output-canvas'), video);
 
   webcamRunning = true;
