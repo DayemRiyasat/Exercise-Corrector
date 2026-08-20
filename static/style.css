@@ -16,6 +16,10 @@
     box-sizing: border-box;
 }
 
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
 img,
 video,
 canvas {
@@ -2260,139 +2264,7 @@ h4 {
 /* --------------------------------------------------------------------------
    15. Responsive
    -------------------------------------------------------------------------- */
-@media (max-width: 1180px) {
-    #analysis-section {
-        grid-template-columns: 1fr;
-    }
 
-    .status-panel {
-        position: static;
-    }
-
-    .panel-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 720px) {
-    :root {
-        --gap: 16px;
-    }
-
-    .container {
-        padding: 0 14px;
-    }
-
-    .app-bar {
-        border-radius: 0 0 var(--r-xl) var(--r-xl);
-        padding-top: 20px;
-    }
-
-    .brand-stat {
-        gap: 14px;
-    }
-
-    .brand-stat-value {
-        font-size: 1.15rem;
-    }
-
-    .tab-rail {
-        overflow-x: auto;
-        scrollbar-width: none;
-        margin-top: 18px;
-    }
-
-    .tab-rail::-webkit-scrollbar {
-        display: none;
-    }
-
-    .tab {
-        padding: 12px 15px 14px;
-        font-size: .87rem;
-        white-space: nowrap;
-    }
-
-    .tab::after {
-        left: 15px;
-        right: 15px;
-    }
-
-    .section,
-    .panel,
-    .header,
-    .hero-progress {
-        padding: 22px 18px 24px;
-        border-radius: var(--r-lg);
-    }
-
-    .stage,
-    .status-panel {
-        padding: 18px;
-        border-radius: var(--r-lg);
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 14px 0;
-    }
-
-    .stat-item:nth-child(3n+1)::before {
-        display: none;
-    }
-
-    .session-card {
-        grid-template-columns: auto 1fr;
-        gap: 12px 14px;
-    }
-
-    .session-figures {
-        grid-column: 1 / -1;
-        justify-content: space-between;
-        gap: 10px;
-        padding-top: 13px;
-        border-top: 1px solid var(--line);
-    }
-
-    .chart-plot {
-        height: 150px;
-        gap: 4px;
-    }
-
-    .chart-label {
-        font-size: .6rem;
-    }
-
-    .controls,
-    .video-controls,
-    .image-controls {
-        gap: 9px;
-    }
-
-    .btn {
-        padding: 12px 18px;
-        font-size: .86rem;
-    }
-
-    .rep-number {
-        font-size: 1.7rem;
-    }
-
-    .streak-dot {
-        height: 34px;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-    *,
-    *::before,
-    *::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
 
 /* ==========================================================================
    16. Marketing site components
@@ -3783,172 +3655,7 @@ a.breakdown-card:hover {
 /* --------------------------------------------------------------------------
    18. Responsive for the site layer
    -------------------------------------------------------------------------- */
-@media (max-width: 1080px) {
-    .hero-grid {
-        grid-template-columns: 1fr;
-        gap: 44px;
-    }
 
-    .hero-visual {
-        max-width: 460px;
-        margin: 0 auto;
-        width: 100%;
-    }
-
-    .split {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
-
-    .detail-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .detail-side {
-        position: static;
-    }
-
-    .footer-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 28px;
-    }
-}
-
-@media (max-width: 860px) {
-    .nav-toggle {
-        display: block;
-    }
-
-    .nav-menu {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 4px;
-        background: var(--ink-2);
-        padding: 14px 20px 20px;
-        border-radius: 0 0 var(--r-lg) var(--r-lg);
-        box-shadow: var(--shadow-lg);
-        display: none;
-    }
-
-    .nav-menu.open {
-        display: flex;
-    }
-
-    .nav-link {
-        padding: 13px 14px;
-        border-radius: var(--r-md);
-    }
-
-    .nav-link.active::after {
-        left: 14px;
-        right: auto;
-        width: 22px;
-        bottom: 6px;
-    }
-
-    .nav-cta {
-        margin: 8px 0 0;
-        justify-content: center;
-    }
-
-    .site-nav {
-        position: sticky;
-    }
-
-    .nav-inner {
-        position: relative;
-    }
-}
-
-@media (max-width: 720px) {
-    .hero {
-        padding: 40px 0 54px;
-        border-radius: 0 0 var(--r-xl) var(--r-xl);
-    }
-
-    .page-head {
-        padding: 32px 0 38px;
-        border-radius: 0 0 var(--r-xl) var(--r-xl);
-    }
-
-    .section-block {
-        padding: 38px 0;
-    }
-
-    .scan-float {
-        font-size: .7rem;
-        padding: 8px 12px;
-    }
-
-    .scan-float--a {
-        left: -8px;
-    }
-
-    .scan-float--b {
-        left: -4px;
-    }
-
-    .scan-float--c {
-        right: -8px;
-    }
-
-    .stat-band-grid {
-        grid-template-columns: repeat(2, 1fr);
-        padding: 18px;
-    }
-
-    .band-value {
-        font-size: 1.7rem;
-    }
-
-    .footer-grid {
-        grid-template-columns: 1fr;
-        gap: 26px;
-    }
-
-    .page-head-stats {
-        gap: 14px 24px;
-    }
-
-    .head-stat-link {
-        margin-left: 0;
-        width: 100%;
-        justify-content: center;
-    }
-
-    .detail-head {
-        gap: 13px;
-    }
-
-    .detail-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 1.35rem;
-    }
-
-    .error-page {
-        padding: 48px 20px 54px;
-    }
-
-    .error-code {
-        font-size: 3.4rem;
-    }
-
-    .cta-inner {
-        padding: 38px 20px 42px;
-    }
-
-    .library-row,
-    .feature-card,
-    .step-card,
-    .library-card {
-        padding: 20px 18px;
-    }
-}
 
 /* --------------------------------------------------------------------------
    19. Grid-child guards and explicit variants
@@ -4514,75 +4221,7 @@ body {
 }
 
 /* ---- Responsive -------------------------------------------------------- */
-@media (max-width: 1080px) {
-    .hero-art {
-        padding-top: 30px;
-    }
 
-    .report {
-        right: -14px;
-    }
-}
-
-@media (max-width: 720px) {
-    .section-block {
-        padding: 64px 0;
-    }
-
-    .hero {
-        padding: 46px 0 68px;
-    }
-
-    .block-head--center {
-        margin-bottom: 34px;
-    }
-
-    .device {
-        width: 224px;
-        border-radius: 36px;
-    }
-
-    .report {
-        position: static;
-        width: 100%;
-        max-width: 300px;
-        margin: 20px auto 0;
-    }
-
-    .hero-art {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .hero-tag--a {
-        top: 26px;
-        left: -6px;
-    }
-
-    .hero-tag--b {
-        top: 132px;
-        right: -4px;
-        left: auto;
-        bottom: auto;
-    }
-
-    .feature-art {
-        padding: 20px 18px;
-    }
-
-    .feature-card h3,
-    .feature-card p {
-        padding: 0 20px;
-    }
-
-    .cta-inner {
-        padding: 48px 20px 54px;
-    }
-
-    .band-value {
-        font-size: 1.9rem;
-    }
-}
 
 /* ==========================================================================
    22. Hero composition: give the device room to be the focal point
@@ -4667,6 +4306,70 @@ body {
     left: -14px;
 }
 
+
+/* ==========================================================================
+   23. Responsive
+   ==========================================================================
+   All media queries live at the end, ordered widest to narrowest. Base
+   rules added later in the file would otherwise outrank the mobile rules
+   that came before them, which is how the hero ended up locked to two
+   columns on phones. */
+
+@media (max-width: 1180px) {
+    #analysis-section {
+        grid-template-columns: 1fr;
+    }
+
+    .status-panel {
+        position: static;
+    }
+
+    .panel-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1080px) {
+    .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 44px;
+    }
+
+    .hero-visual {
+        max-width: 460px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .split {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-side {
+        position: static;
+    }
+
+    .footer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 28px;
+    }
+}
+
+@media (max-width: 1080px) {
+    .hero-art {
+        padding-top: 30px;
+    }
+
+    .report {
+        right: -14px;
+    }
+}
+
 @media (max-width: 1080px) {
     .hero-art {
         min-height: 0;
@@ -4676,6 +4379,56 @@ body {
 
     .report {
         right: 0;
+    }
+}
+
+@media (max-width: 860px) {
+    .nav-toggle {
+        display: block;
+    }
+
+    .nav-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        background: var(--ink-2);
+        padding: 14px 20px 20px;
+        border-radius: 0 0 var(--r-lg) var(--r-lg);
+        box-shadow: var(--shadow-lg);
+        display: none;
+    }
+
+    .nav-menu.open {
+        display: flex;
+    }
+
+    .nav-link {
+        padding: 13px 14px;
+        border-radius: var(--r-md);
+    }
+
+    .nav-link.active::after {
+        left: 14px;
+        right: auto;
+        width: 22px;
+        bottom: 6px;
+    }
+
+    .nav-cta {
+        margin: 8px 0 0;
+        justify-content: center;
+    }
+
+    .site-nav {
+        position: sticky;
+    }
+
+    .nav-inner {
+        position: relative;
     }
 }
 
@@ -4720,5 +4473,529 @@ body {
         top: 210px;
         bottom: auto;
         left: 0;
+    }
+
+    /* Once the hero stacks, the floating tags land on top of the rep chip
+       (measured overlap at 390px wide). They are decorative, so the small
+       screen is better off without the clutter. */
+    .hero-tag {
+        display: none;
+    }
+}
+
+@media (max-width: 720px) {
+    :root {
+        --gap: 16px;
+    }
+
+    .container {
+        padding: 0 14px;
+    }
+
+    .app-bar {
+        border-radius: 0 0 var(--r-xl) var(--r-xl);
+        padding-top: 20px;
+    }
+
+    .brand-stat {
+        gap: 14px;
+    }
+
+    .brand-stat-value {
+        font-size: 1.15rem;
+    }
+
+    .tab-rail {
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin-top: 18px;
+    }
+
+    .tab-rail::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tab {
+        padding: 12px 15px 14px;
+        font-size: .87rem;
+        white-space: nowrap;
+    }
+
+    .tab::after {
+        left: 15px;
+        right: 15px;
+    }
+
+    .section {
+        padding: 22px 18px 24px;
+        border-radius: var(--r-lg);
+    }
+
+    .panel {
+        padding: 22px 18px 24px;
+        border-radius: var(--r-lg);
+    }
+
+    .header {
+        padding: 22px 18px 24px;
+        border-radius: var(--r-lg);
+    }
+
+    .hero-progress {
+        padding: 22px 18px 24px;
+        border-radius: var(--r-lg);
+    }
+
+    .stage {
+        padding: 18px;
+        border-radius: var(--r-lg);
+    }
+
+    .status-panel {
+        padding: 18px;
+        border-radius: var(--r-lg);
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px 0;
+    }
+
+    .stat-item:nth-child(3n+1)::before {
+        display: none;
+    }
+
+    .session-card {
+        grid-template-columns: auto 1fr;
+        gap: 12px 14px;
+    }
+
+    .session-figures {
+        grid-column: 1 / -1;
+        justify-content: space-between;
+        gap: 10px;
+        padding-top: 13px;
+        border-top: 1px solid var(--line);
+    }
+
+    .chart-plot {
+        height: 150px;
+        gap: 4px;
+    }
+
+    .chart-label {
+        font-size: .6rem;
+    }
+
+    .controls {
+        gap: 9px;
+    }
+
+    .video-controls {
+        gap: 9px;
+    }
+
+    .image-controls {
+        gap: 9px;
+    }
+
+    .btn {
+        padding: 12px 18px;
+        font-size: .86rem;
+    }
+
+    .rep-number {
+        font-size: 1.7rem;
+    }
+
+    .streak-dot {
+        height: 34px;
+    }
+
+    .hero {
+        padding: 46px 0 68px;
+        border-radius: 0 0 var(--r-xl) var(--r-xl);
+    }
+
+    .page-head {
+        padding: 32px 0 38px;
+        border-radius: 0 0 var(--r-xl) var(--r-xl);
+    }
+
+    .section-block {
+        padding: 64px 0;
+    }
+
+    .scan-float {
+        font-size: .7rem;
+        padding: 8px 12px;
+    }
+
+    .scan-float--a {
+        left: -8px;
+    }
+
+    .scan-float--b {
+        left: -4px;
+    }
+
+    .scan-float--c {
+        right: -8px;
+    }
+
+    .stat-band-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 18px;
+    }
+
+    .band-value {
+        font-size: 1.9rem;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 26px;
+    }
+
+    .page-head-stats {
+        gap: 14px 24px;
+    }
+
+    .head-stat-link {
+        margin-left: 0;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .detail-head {
+        gap: 13px;
+    }
+
+    .detail-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.35rem;
+    }
+
+    .error-page {
+        padding: 48px 20px 54px;
+    }
+
+    .error-code {
+        font-size: 3.4rem;
+    }
+
+    .cta-inner {
+        padding: 48px 20px 54px;
+    }
+
+    .library-row {
+        padding: 20px 18px;
+    }
+
+    .feature-card {
+        padding: 20px 18px;
+    }
+
+    .step-card {
+        padding: 20px 18px;
+    }
+
+    .library-card {
+        padding: 20px 18px;
+    }
+
+    .block-head--center {
+        margin-bottom: 34px;
+    }
+
+    .feature-art {
+        padding: 20px 18px;
+    }
+
+    .feature-card h3 {
+        padding: 0 20px;
+    }
+
+    .feature-card p {
+        padding: 0 20px;
+    }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+
+/* ==========================================================================
+   24. Small screens
+   ==========================================================================
+   Appended after section 23 so these win over the wider breakpoints. */
+
+@media (max-width: 520px) {
+
+    /* The clamp minimums were tuned for tablets and read oversized on a
+       phone, where they stop scaling and just crowd the screen. */
+    .hero h1 {
+        font-size: clamp(2.05rem, 9vw, 2.6rem);
+    }
+
+    .hero-lead {
+        font-size: 1rem;
+    }
+
+    .block-head h2,
+    .cta-inner h2,
+    .split-copy h2 {
+        font-size: clamp(1.55rem, 7vw, 2rem);
+    }
+
+    .page-head h1 {
+        font-size: clamp(1.6rem, 7.5vw, 2.1rem);
+    }
+
+    .page-lead,
+    .block-lead {
+        font-size: .94rem;
+    }
+
+    .device {
+        width: 100%;
+        max-width: 248px;
+    }
+
+    .stat-band-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        padding: 16px;
+    }
+
+    .band-value {
+        font-size: 1.6rem;
+    }
+
+    .band-label {
+        font-size: .66rem;
+    }
+
+    .error-code {
+        font-size: 3rem;
+    }
+
+    .headline-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Five across is unreadable at this width. */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-item:nth-child(3n+1)::before {
+        display: block;
+    }
+
+    .stat-item:nth-child(2n+1)::before {
+        display: none;
+    }
+}
+
+/* Touch devices: hit areas below ~44px are hard to tap accurately. */
+@media (hover: none) and (pointer: coarse) {
+
+    .btn {
+        min-height: 46px;
+    }
+
+    .btn-sm {
+        min-height: 42px;
+    }
+
+    .filter-chip,
+    .segmented button {
+        min-height: 44px;
+    }
+
+    .nav-link {
+        display: flex;
+        align-items: center;
+        min-height: 46px;
+    }
+
+    .faq-item summary {
+        min-height: 58px;
+    }
+
+    .checkbox-label {
+        min-height: 46px;
+    }
+}
+
+/* ==========================================================================
+   23. Mobile refinement
+   ========================================================================== */
+
+/* ---- Skeleton alignment (all viewports) --------------------------------
+   The canvas is sized to the video's natural dimensions, but it was
+   stretched to fill a 16:10 box while the video itself was letterboxed by
+   object-fit: contain. The overlay therefore drifted from the body by up
+   to ~43px at the frame edges. Giving the canvas the same object-fit makes
+   it letterbox identically, so the landmarks land where the limbs are.
+   Most visible on phones, where camera aspect ratios differ most from
+   16:10. */
+#output-canvas,
+#video-output-canvas {
+    object-fit: contain;
+}
+
+/* iOS inflates text in landscape unless told not to. */
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+/* In-page anchors (#how-it-works) otherwise land under the sticky nav. */
+html {
+    scroll-padding-top: 90px;
+}
+
+@media (max-width: 760px) {
+
+    /* A standing body fits a portrait frame far better than a 16:10 one,
+       which is mostly empty air on either side of a phone camera. */
+    .video-container,
+    .video-display-container {
+        aspect-ratio: 3 / 4;
+    }
+
+    /* 64px of body padding plus a 64px footer margin left a dead band
+       above the footer on a small screen. */
+    body {
+        padding-bottom: 0;
+    }
+
+    .site-footer {
+        margin-top: 44px;
+        padding: 40px 0 24px;
+    }
+
+    .footer-note {
+        padding: 18px 0;
+    }
+}
+
+@media (max-width: 520px) {
+
+    .container {
+        padding: 0 16px;
+    }
+
+    /* Two stacked buttons at natural width look ragged; full width reads
+       as a deliberate pair and gives a bigger target. */
+    .hero-actions .btn,
+    .cta-inner .btn,
+    .block-foot .btn,
+    .empty-state .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hero-actions {
+        gap: 10px;
+    }
+
+    /* Both floating tags sat on the device once it shrank, and the top one
+       landed against the reps chip. They are decorative, and the device is
+       the thing worth seeing at this width, so they step aside. */
+    .hero-tag--a,
+    .hero-tag--b {
+        display: none;
+    }
+
+    .report {
+        max-width: 248px;
+    }
+
+    /* 14 squares wrapped awkwardly; 7 per row gives two clean weeks. */
+    .streak-strip {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 7px;
+    }
+
+    .streak-dot {
+        height: 34px;
+    }
+
+    /* The year view puts 12 columns in ~300px, so the labels need room. */
+    .chart-plot {
+        height: 140px;
+        gap: 3px;
+    }
+
+    .chart-label {
+        font-size: .56rem;
+        letter-spacing: -.02em;
+    }
+
+    .chart-bar {
+        width: 76%;
+    }
+
+    .section-block {
+        padding: 52px 0;
+    }
+
+    .panel,
+    .section,
+    .library-row {
+        padding: 20px 16px 22px;
+    }
+
+    .session-figures {
+        gap: 8px;
+    }
+
+    .session-figure-value {
+        font-size: 1.12rem;
+    }
+
+    .page-head-stats {
+        gap: 12px 20px;
+        margin-top: 22px;
+        padding-top: 18px;
+    }
+
+    .head-stat-value {
+        font-size: 1.2rem;
+    }
+
+    /* Long fault names were colliding with the count on narrow rows. */
+    .fault-row {
+        grid-template-columns: 1fr auto;
+        gap: 4px 8px;
+    }
+
+    .fault-name {
+        font-size: .84rem;
+    }
+
+    .rep-counter-overlay {
+        top: 10px;
+        left: 10px;
+        padding: 8px 14px;
+        min-width: 76px;
+    }
+
+    .rep-number {
+        font-size: 1.5rem;
     }
 }
