@@ -1,4 +1,4 @@
-# exercises/deadlift/RepCounter.py
+# exercises/deadlift/RepCounter.py 
 
 import numpy as np
 import time
