@@ -193,4 +193,4 @@ class BicepCurlRepCounter:
         self.form_scores = []
         self.lowest_angle = 180
         self.frames_in_current_state = 0
-        self.last_rep_time = 0
+        self.last_rep_time = 0 
