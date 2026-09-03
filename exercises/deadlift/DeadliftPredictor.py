@@ -1,4 +1,4 @@
-# exercises/deadlift/DeadliftPredictor.py
+# exercises/deadlift/DeadliftPredictor.py 
 
 from base_predictor import ExercisePredictor
 from exercises.deadlift.RepCounter import DeadliftRepCounter
