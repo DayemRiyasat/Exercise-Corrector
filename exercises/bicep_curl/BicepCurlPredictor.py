@@ -1,4 +1,4 @@
-# exercises/bicep_curl/BicepCurlPredictor.py
+# exercises/bicep_curl/BicepCurlPredictor.py 
 
 from base_predictor import ExercisePredictor
 from exercises.bicep_curl.RepCounter import BicepCurlRepCounter
