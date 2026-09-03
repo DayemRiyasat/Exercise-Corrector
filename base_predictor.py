@@ -7,11 +7,22 @@
 # classification model on them. No mediapipe, cv2, or threading here,
 # so it runs cleanly inside a PythonAnywhere web worker.
 
+import logging
 import numpy as np
 import tensorflow as tf
 import joblib
 import os
 import gc
+
+logger = logging.getLogger('app')
+
+# Anchor every model path to the folder this file lives in, NOT to the
+# process's current working directory. Relative paths like
+# "exercises/squat/models/..." only resolve correctly if the WSGI worker's
+# cwd happens to be the project root -- which is not guaranteed across
+# reloads/redeploys, and is exactly what caused "Model files not found"
+# after previously working fine.
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
 class ExercisePredictor:
@@ -32,21 +43,31 @@ class ExercisePredictor:
     def load_model(self):
         """Load ML model, scaler, and label encoder"""
         try:
-            model_path = f"exercises/{self.exercise_type}/models/{self.exercise_type}_model.h5"
-            scaler_path = f"exercises/{self.exercise_type}/models/{self.exercise_type}_scaler.pkl"
-            encoder_path = f"exercises/{self.exercise_type}/models/{self.exercise_type}_label_encoder.pkl"
+            model_dir = os.path.join(PROJECT_ROOT, 'exercises', self.exercise_type, 'models')
+            model_path = os.path.join(model_dir, f'{self.exercise_type}_model.h5')
+            scaler_path = os.path.join(model_dir, f'{self.exercise_type}_scaler.pkl')
+            encoder_path = os.path.join(model_dir, f'{self.exercise_type}_label_encoder.pkl')
 
-            if not all(os.path.exists(p) for p in [model_path, scaler_path, encoder_path]):
+            missing = [p for p in (model_path, scaler_path, encoder_path) if not os.path.exists(p)]
+            if missing:
+                logger.error(
+                    '[%s] model files not found, cwd=%r, looked in %r, missing=%r',
+                    self.exercise_type, os.getcwd(), model_dir, missing
+                )
                 print(f"Model files not found for {self.exercise_type}")
                 return False
 
+            logger.info('[%s] loading model from %s', self.exercise_type, model_dir)
             self.model = tf.keras.models.load_model(model_path)
             self.scaler = joblib.load(scaler_path)
             self.label_encoder = joblib.load(encoder_path)
 
             print(f"Model loaded successfully: {self.exercise_type}")
+            logger.info('[%s] model, scaler, encoder loaded OK, classes=%s',
+                         self.exercise_type, list(getattr(self.label_encoder, 'classes_', [])))
             return True
         except Exception as e:
+            logger.exception('[%s] error loading model', self.exercise_type)
             print(f"Error loading model: {e}")
             return False
 
