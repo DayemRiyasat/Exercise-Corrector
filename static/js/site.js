@@ -57,6 +57,47 @@
     window.addEventListener('scroll', onScroll, { passive: true });
   }
 
+  // ---- Theme --------------------------------------------------------------
+  // The inline script in <head> has already applied the stored theme, so all
+  // this does is flip it and remember the choice.
+  const THEME_KEY = 'exco.theme';
+  const themeBtn = document.getElementById('theme-toggle');
+
+  function isDark() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+  }
+
+  function applyTheme(dark) {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    if (themeBtn) themeBtn.setAttribute('aria-pressed', String(dark));
+  }
+
+  if (themeBtn) {
+    applyTheme(isDark());
+
+    themeBtn.addEventListener('click', function () {
+      const next = !isDark();
+      applyTheme(next);
+      try {
+        localStorage.setItem(THEME_KEY, next ? 'dark' : 'light');
+      } catch (e) { /* private mode: the choice just will not persist */ }
+      toast(next ? 'Dark theme on' : 'Light theme on',
+            next ? 'bi-moon-stars-fill' : 'bi-sun-fill');
+    });
+
+    // Keep following the operating system, but only until the visitor has
+    // expressed a preference of their own.
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onSystemChange = function (e) {
+      try {
+        if (localStorage.getItem(THEME_KEY)) return;
+      } catch (err) { /* ignore */ }
+      applyTheme(e.matches);
+    };
+    if (mq.addEventListener) mq.addEventListener('change', onSystemChange);
+    else if (mq.addListener) mq.addListener(onSystemChange);
+  }
+
   // ---- FAQ: one open at a time -------------------------------------------
   const faqItems = Array.prototype.slice.call(document.querySelectorAll('.faq-item'));
   faqItems.forEach(function (item) {
