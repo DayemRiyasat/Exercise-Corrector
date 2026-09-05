@@ -42,6 +42,11 @@ button {
     /* Ink ---------------------------------------------------------------
        Near-black carries the structure: headings, dark surfaces, footer. */
     --ink: #0B0C0E;
+    /* Dark surfaces (footer, device frame, toast). Kept separate from
+       --ink so that --ink can flip to a light colour in dark mode while
+       these stay dark. */
+    --surface-dark: #0B0C0E;
+    --surface-dark-2: #14161A;
     --ink-2: #14161A;
     --body: #22252A;
     --ink-soft: #3C424B;
@@ -82,24 +87,25 @@ button {
     --grad-field: linear-gradient(180deg, #FFFFFF 0%, #F5F6F8 100%);
 
     /* Shape ------------------------------------------------------------- */
-    --r-2xl: 40px;
-    --r-xl: 32px;
-    --r-lg: 24px;
-    --r-md: 16px;
-    --r-sm: 11px;
-    --r-pill: 999px;
+    --r-2xl: 10px;
+    --r-xl: 8px;
+    --r-lg: 8px;
+    --r-md: 6px;
+    --r-sm: 4px;
+    --r-pill: 4px;
 
     /* Elevation ----------------------------------------------------------
        Neutral black shadows: a blue-tinted shadow reads as colour cast
        against white. */
-    --shadow-sm: 0 2px 8px rgba(11, 12, 14, .06);
-    --shadow-md: 0 14px 30px rgba(11, 12, 14, .09);
-    --shadow-lg: 0 26px 54px rgba(11, 12, 14, .16);
-    --shadow-strong: 0 16px 32px rgba(11, 12, 14, .26);
-    --shadow-accent: 0 14px 28px rgba(22, 56, 110, .28);
+    --shadow-sm: 0 0 0 1px var(--line);
+    --shadow-md: 0 0 0 1px var(--line);
+    --shadow-lg: 0 0 0 1px var(--line), 0 18px 38px rgba(11, 12, 14, .13);
+    --shadow-strong: 0 10px 26px rgba(11, 12, 14, .20);
+    --shadow-accent: 0 8px 20px rgba(22, 56, 110, .24);
 
     /* Type -------------------------------------------------------------- */
-    --font-body: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: 'Space Grotesk', 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
     /* Rhythm ------------------------------------------------------------ */
     --gap: 26px;
@@ -153,7 +159,7 @@ h4 {
     position: absolute;
     left: -9999px;
     top: 0;
-    background: var(--ink);
+    background: var(--surface-dark);
     color: #fff;
     padding: 12px 20px;
     border-radius: 0 0 var(--r-sm) 0;
@@ -391,7 +397,7 @@ h4 {
 
 /* Footer ----------------------------------------------------------------- */
 .site-footer {
-    background: var(--ink);
+    background: var(--surface-dark);
     color: rgba(255, 255, 255, .72);
     padding: 54px 0 30px;
     margin-top: 64px;
@@ -2175,7 +2181,7 @@ h4 {
     left: 50%;
     bottom: 26px;
     transform: translate(-50%, 130%);
-    background: var(--ink);
+    background: var(--surface-dark);
     color: #fff;
     font-size: .88rem;
     font-weight: 700;
@@ -2257,7 +2263,7 @@ h4 {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--ink);
+    background: var(--surface-dark);
     background-clip: content-box;
 }
 
@@ -3695,8 +3701,10 @@ a.breakdown-card:hover {
 .cta-inner .btn-success,
 .page-head .btn-success,
 .side-panel--cta .btn-success {
-    background: var(--paper);
-    color: var(--ink);
+    /* Literal white, not var(--paper): these sit on the near-black header in
+       both themes, so the surface must not follow the theme. */
+    background: #fff;
+    color: #0B0C0E;
     box-shadow: 0 12px 26px rgba(0, 0, 0, .34);
 }
 
@@ -3794,7 +3802,7 @@ body {
 .device {
     position: relative;
     width: 268px;
-    background: var(--ink);
+    background: var(--surface-dark);
     border-radius: 42px;
     padding: 12px;
     box-shadow: 0 34px 70px rgba(0, 0, 0, .48), 0 0 0 1px rgba(255, 255, 255, .1) inset;
@@ -4122,13 +4130,13 @@ body {
 .ill-bg { fill: var(--paper); }
 .ill-soft { fill: #D6E0F2; }
 .ill-line-fill { fill: #BECDE6; }
-.ill-ink { fill: var(--ink); }
+.ill-ink { fill: var(--surface-dark); }
 .ill-accent { fill: var(--accent); }
 .ill-accent-on-dark { fill: var(--accent-on-dark); }
 .ill-dot { fill: rgba(255, 255, 255, .34); }
 .ill-bar-light { fill: rgba(255, 255, 255, .82); }
 .ill-bar-dim { fill: rgba(255, 255, 255, .28); }
-.ill-bar-ink { fill: var(--ink); }
+.ill-bar-ink { fill: var(--surface-dark); }
 .ill-bar-line { fill: #BECDE6; }
 
 .ill-dash {
@@ -4395,7 +4403,7 @@ body {
         flex-direction: column;
         align-items: stretch;
         gap: 4px;
-        background: var(--ink-2);
+        background: var(--surface-dark-2);
         padding: 14px 20px 20px;
         border-radius: 0 0 var(--r-lg) var(--r-lg);
         box-shadow: var(--shadow-lg);
@@ -4998,4 +5006,347 @@ html {
     .rep-number {
         font-size: 1.5rem;
     }
+}
+
+/* ==========================================================================
+   24. Editorial typography and structure
+   ==========================================================================
+   Two faces now do the work that Montserrat did alone. Space Grotesk carries
+   headings and anything numeric, where its slightly mechanical shapes suit a
+   measurement tool. Inter takes the reading copy, because it was drawn for
+   small sizes on screen and gets out of the way. */
+
+h1,
+h2,
+h3,
+h4,
+.brand-name,
+.eyebrow,
+.stage-title,
+.panel-title,
+.section-lead,
+.step-index {
+    font-family: var(--font-display);
+}
+
+/* Numerals: tabular figures stop counters and stats jittering as they change. */
+.band-value,
+.headline-stat-value,
+.head-stat-value,
+.stat-value,
+.rep-number,
+.device-chip-value,
+.ring-value,
+.session-figure-value,
+.breakdown-reps,
+.error-code,
+.report-value,
+.report-conf,
+.confidence-value,
+.accuracy-pill,
+.fault-count {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+body {
+    font-family: var(--font-body);
+    letter-spacing: 0;
+}
+
+/* Inter runs slightly wide at display sizes; pull the big headings in. */
+h1 {
+    letter-spacing: -.03em;
+}
+
+h2,
+h3 {
+    letter-spacing: -.02em;
+}
+
+.hero-lead,
+.block-lead,
+.page-lead {
+    font-family: var(--font-body);
+}
+
+/* ---- Structure ---------------------------------------------------------
+   With the shadows reduced to hairlines, the page needs ruled edges to keep
+   its rhythm. Consecutive sections are separated by a line rather than by
+   drop shadows floating off a coloured field. */
+
+.section-block + .section-block {
+    border-top: 1px solid var(--line);
+}
+
+.section-block--tint {
+    background: var(--panel);
+}
+
+/* Cards sit flush and share a single hairline instead of each carrying a
+   shadow. */
+.stat-band-grid,
+.feature-card,
+.library-card,
+.step-card,
+.pipe-card,
+.panel,
+.section,
+.header,
+.stage,
+.status-panel,
+.faq-item {
+    border: 1px solid var(--line);
+    box-shadow: none;
+}
+
+.feature-card:hover,
+.library-card:hover {
+    transform: none;
+    border-color: var(--ink);
+    box-shadow: none;
+}
+
+.faq-item[open] {
+    box-shadow: none;
+    border-color: var(--ink);
+}
+
+/* The illustration tile now needs a rule to divide it from the copy. */
+.feature-art {
+    border-bottom: 1px solid var(--line);
+}
+
+/* Buttons lose their pill shape with --r-pill, so the primary action leans on
+   weight and contrast instead. */
+.btn {
+    letter-spacing: .01em;
+}
+
+.btn:hover {
+    transform: none;
+    box-shadow: none;
+    filter: brightness(1.08);
+}
+
+.btn-secondary:hover {
+    border-color: var(--ink);
+    filter: none;
+}
+
+/* Chips and badges read as tags rather than lozenges at this radius. */
+.pill,
+.hero-chip,
+.filter-chip,
+.session-mode,
+.accuracy-pill,
+.footer-badge,
+.pipe-tag {
+    letter-spacing: .02em;
+}
+
+/* ==========================================================================
+   25. Dark theme
+   ==========================================================================
+   Applied by setting data-theme="dark" on <html>. site.js persists the
+   choice and falls back to the operating system preference on a first
+   visit. The blue gradient headers are already near black, so they carry
+   over unchanged; what flips is the page field, the card surfaces and the
+   direction of the text. */
+
+:root {
+    color-scheme: light;
+}
+
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* Text goes light. --surface-dark deliberately does not move, so the
+       footer, the device frame and the toast stay dark in both themes. */
+    --ink: #F3F5F8;
+    --ink-2: #E4E8EE;
+    --body: #C6CCD6;
+    --ink-soft: #A9B1BD;
+    --muted: #8B939F;
+
+    /* The dark blue accent is unreadable on a dark field, so the accent
+       moves to its light weight and the tints go deep. */
+    --accent: #A8C4EE;
+    --accent-deep: #C9DBF7;
+    --accent-bright: #8FB3E8;
+    --accent-ink: #A8C4EE;
+    --accent-mid: #3B4759;
+    --accent-soft: #1A2333;
+
+    /* Surfaces */
+    --paper: #15181D;
+    --panel: #1B1F26;
+    --panel-2: #242932;
+    --line: #2C323C;
+    --line-soft: #232831;
+
+    --grad-field: linear-gradient(180deg, #0F1115 0%, #15181D 100%);
+    --grad-accent: linear-gradient(115deg, #A8C4EE 0%, #6E96D6 100%);
+
+    --shadow-lg: 0 0 0 1px var(--line), 0 18px 38px rgba(0, 0, 0, .55);
+    --shadow-strong: 0 10px 26px rgba(0, 0, 0, .5);
+}
+
+/* Status tints are written as literal colours in the light theme, so they
+   need restating rather than re-tokenising. */
+[data-theme="dark"] .accuracy-pill,
+[data-theme="dark"] .pill--success,
+[data-theme="dark"] .pipe-tag--local {
+    background: rgba(70, 196, 141, .15);
+    color: #74DDB0;
+}
+
+[data-theme="dark"] .accuracy-pill.is-mid,
+[data-theme="dark"] .pill--warning,
+[data-theme="dark"] .coming-soon-badge {
+    background: rgba(224, 163, 64, .15);
+    color: #F0C173;
+}
+
+[data-theme="dark"] .accuracy-pill.is-low,
+[data-theme="dark"] .pill--danger {
+    background: rgba(240, 112, 95, .15);
+    color: #F5998C;
+}
+
+[data-theme="dark"] .status-icon.is-good {
+    background: rgba(70, 196, 141, .15);
+    color: #74DDB0;
+}
+
+[data-theme="dark"] .status-icon.is-warn {
+    background: rgba(224, 163, 64, .15);
+    color: #F0C173;
+}
+
+[data-theme="dark"] .status-icon.is-bad {
+    background: rgba(240, 112, 95, .15);
+    color: #F5998C;
+}
+
+[data-theme="dark"] .fault-card--danger {
+    background: rgba(240, 112, 95, .07);
+}
+
+[data-theme="dark"] .pipe-tag--server {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+/* Illustrations: the mid blues were chosen against a pale tile. */
+[data-theme="dark"] .ill-soft {
+    fill: #33405A;
+}
+
+[data-theme="dark"] .ill-bar-line,
+[data-theme="dark"] .ill-line-fill {
+    fill: #3E4C68;
+}
+
+/* The inverted CTA on dark sections is white in both themes, so its hover
+   tint must not become a dark blue. */
+[data-theme="dark"] .hero .btn-success:hover,
+[data-theme="dark"] .cta-inner .btn-success:hover,
+[data-theme="dark"] .page-head .btn-success:hover,
+[data-theme="dark"] .side-panel--cta .btn-success:hover {
+    background: #E4EAF4;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, .06);
+}
+
+/* ---- The toggle itself -------------------------------------------------- */
+.theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-left: 4px;
+    border-radius: var(--r-sm);
+    color: rgba(255, 255, 255, .8);
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .16);
+    font-size: 1.05rem;
+    transition: background .16s ease, color .16s ease;
+    flex-shrink: 0;
+}
+
+.theme-toggle:hover {
+    background: rgba(255, 255, 255, .18);
+    color: #fff;
+}
+
+/* Show the icon for the theme you would switch *to*. */
+.theme-toggle .icon-dark {
+    display: none;
+}
+
+[data-theme="dark"] .theme-toggle .icon-dark {
+    display: block;
+}
+
+[data-theme="dark"] .theme-toggle .icon-light {
+    display: none;
+}
+
+@media (max-width: 860px) {
+    .theme-toggle {
+        width: 100%;
+        height: 44px;
+        margin: 8px 0 0;
+        gap: 9px;
+        grid-auto-flow: column;
+        font-size: .92rem;
+        font-weight: 700;
+    }
+
+    .theme-toggle::after {
+        content: 'Switch theme';
+    }
+}
+
+/* ---- Surfaces that stay white in both themes ----------------------------
+   A handful of elements sit on the near-black hero or over video, so their
+   background is hard-coded white rather than var(--paper). Their text was
+   still coming from --ink and --accent, which flip light in dark mode and
+   left them white-on-white. These pin the foreground to the light-theme
+   values so the elements read the same in both. */
+
+[data-theme="dark"] .hero-tag,
+[data-theme="dark"] .scan-float,
+[data-theme="dark"] .device-chip-value,
+[data-theme="dark"] .rep-number,
+[data-theme="dark"] .scan-reps-value {
+    color: #0B0C0E;
+}
+
+[data-theme="dark"] .fault-fix {
+    background: #fff;
+    color: #22252A;
+}
+
+[data-theme="dark"] .hero-tag i,
+[data-theme="dark"] .scan-float i,
+[data-theme="dark"] .fault-fix i,
+[data-theme="dark"] .device-chip-label,
+[data-theme="dark"] .exercise-icon,
+[data-theme="dark"] .mode-go {
+    color: #16386E;
+}
+
+[data-theme="dark"] .rep-label,
+[data-theme="dark"] .scan-reps-label {
+    color: #12315F;
+}
+
+[data-theme="dark"] .exercise-icon,
+[data-theme="dark"] .mode-go {
+    border-color: #D8DDE5;
 }
