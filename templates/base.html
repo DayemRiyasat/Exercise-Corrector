@@ -4,15 +4,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#01D3D2">
+    <meta name="theme-color" content="#0B0C0E">
     <title>{% block title %}ShapeForm{% endblock %}</title>
+
+    <script>
+        // Runs before first paint so the page never flashes the wrong theme.
+        // Falls back to the operating system preference until the visitor
+        // makes a choice of their own.
+        (function () {
+            try {
+                var saved = localStorage.getItem('exco.theme');
+                var dark = saved
+                    ? saved === 'dark'
+                    : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            } catch (e) { /* private mode: fall through to the light default */ }
+        })();
+    </script>
     <meta name="description"
         content="{% block description %}ShapeForm reads your joints through a webcam, counts your reps and corrects your form while you are still moving.{% endblock %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="alternate icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -48,6 +67,12 @@
                 <a href="{{ url_for('analyze') }}" class="btn btn-success btn-sm nav-cta">
                     <i class="bi bi-camera-video-fill"></i>Start analysing
                 </a>
+
+                <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false"
+                    aria-label="Switch between the light and dark theme">
+                    <i class="bi bi-moon-stars-fill icon-light" aria-hidden="true"></i>
+                    <i class="bi bi-sun-fill icon-dark" aria-hidden="true"></i>
+                </button>
             </nav>
         </div>
     </header>
