@@ -27,7 +27,7 @@
   </svg>
 
   {% elif kind == 'privacy' %}
-  {# Frames stay on the device; only coordinates cross the boundary. #}
+  {# Frames are analysed once and never kept. #}
   <svg viewBox="0 0 320 180" role="presentation">
     <rect class="ill-soft" x="26" y="26" width="128" height="128" rx="22" />
     <rect class="ill-ink" x="46" y="44" width="88" height="92" rx="12" />
@@ -39,7 +39,7 @@
     {% endfor %}
     <rect class="ill-accent" x="238" y="40" width="56" height="34" rx="12" />
     <path class="ill-stroke-white" d="M254 57 l7 7 l13 -14" />
-    <text class="ill-label" x="166" y="126">x, y, z only</text>
+    <text class="ill-label" x="166" y="126">never stored</text>
   </svg>
 
   {% elif kind == 'counting' %}
@@ -166,6 +166,6 @@
   </div>
 
   <span class="hero-tag hero-tag--a"><i class="bi bi-check-lg"></i>Knees tracking</span>
-  <span class="hero-tag hero-tag--b"><i class="bi bi-broadcast"></i>33 joints</span>
+  <span class="hero-tag hero-tag--b"><i class="bi bi-broadcast"></i>17 joints</span>
 </div>
 {% endmacro %}

@@ -16,7 +16,7 @@ angle halfway through a squat, and by the time you watch a video back, the set
 is finished and you have already done fifteen reps wrong.
 
 The thing is, a lot of what a coach spots is just shapes. Knees caving inwards.
-Hips shooting up before the shoulders. An elbow drifting forward on a curl. A
+Hips shooting up before the shoulders. Hips sagging in a plank. A
 camera can see those shapes too, and it can tell you about them in under a
 second, which is early enough to actually change the next rep.
 
@@ -41,6 +41,9 @@ I built this as my project for TKS Demo Day.
 * Has a light and a dark theme, and remembers which one you picked
 
 ## How it works
+
+This section describes the original MediaPipe route, which no exercise uses any
+more. What runs today is in the next section.
 
 The short version: your browser figures out where your body is, sends just the
 joint positions to the server, and the server decides whether the movement looks
@@ -69,17 +72,64 @@ marked as clean or not afterwards. That sounds obvious, but the first version
 threw away any rep with a mistake in it, which meant the counter stopped working
 at exactly the moment you needed the feedback most.
 
+## All five exercises: the v5.1 / v6 pipeline
+
+Full details (architecture, dataset, results, camera angles, hosting) are in
+[README_V5.md](README_V5.md).
+
+No exercise uses the MediaPipe models above any more. The `exercises/` folder
+now only holds the old squat, lunge and push-up models, which no page calls any
+more, and deadlift and bicep curl are gone from
+the site. Every exercise runs the Exercise-Corrector pipeline in `cv_v5/`, which
+judges whole reps instead of single frames. Jump rope and plank have no reps, so
+they are judged in fixed 2 second windows instead:
+
+```
+camera frames or uploaded clip ─► YOLO11x-pose (17 joints, on the server, 16 fps)
+   ─► fill gaps + One Euro smoothing ─► rep counter (start, bottom, end of each rep)
+   ─► for every finished rep:
+        rules on joint angles (depth, knees, stance, lean, hips, lockout)
+      + a per-rep BiGRU per exercise (is the rep clean? which faults?)
+      ─► fused verdict: clean or named faults, plus a score out of 100
+```
+
+* `cv_v5/ec_pipeline.py` is the pipeline exactly as trained and evaluated on
+  Kaggle, copied unchanged. `calibration_v51.json` holds the calibrated
+  thresholds, `models/<exercise>/pose_gru.pt` the five BiGRUs.
+* `cv_v5/engine.py` connects it to the web app:
+  * **Uploaded video** goes through the exact Kaggle code path as a
+    background job; the page then plays the clip back with the skeleton and
+    shows each rep's verdict as the rep finishes.
+  * **Webcam** frames are sent one at a time (as fast as the server answers,
+    about 4 to 6 a second on a laptop CPU). They are put back on the
+    pipeline's 16 fps clock, and each rep is judged the moment the rep
+    counter closes it.
+  * **A photo** can only use the rule checks that do not need movement
+    (stance, knees caving in, lean, hips). Depth and the BiGRU need a full rep.
+    Jump rope cannot be judged from a photo, so the option is hidden for it.
+* The YOLO weights (`yolo11x-pose.pt`, 118 MB) are not in git. Put a copy in
+  `cv_v5/`, or let ultralytics download it on first use.
+* Optional settings: `EC_LIVE_POSE_WEIGHTS=yolo11s-pose.pt` uses a smaller,
+  faster pose model for the webcam only (not part of the evaluation);
+  `EC_MAX_VIDEO_SECONDS` caps how much of an upload is analysed (default 180);
+  `EC_DEVICE=cuda` uses a GPU.
+
+The fault names for these exercises in `content.py` are the pipeline's own
+list, plus `form_issue` for a rep the model is sure is not clean without one
+fault standing out. Sessions saved with the old names still show readable
+labels on the dashboard.
+
 ## The exercises
 
 | Exercise | Difficulty | Mistakes it spots | Where to put the camera |
 |---|---|---|---|
-| Squat | Beginner | 4 | To your side, about hip height |
-| Lunge | Beginner | 4 | To your side |
-| Push-up | Beginner | 3 | To your side, down near the floor |
-| Deadlift | Intermediate | 3 | To your side, about hip height |
-| Bicep curl | Beginner | 6 | In front of you |
+| Squat | Beginner | 6 | In front or at a slight angle, about hip height |
+| Lunge | Beginner | 4 | In front or at a slight angle |
+| Push-up | Beginner | 5 | To your side or at a slight angle, down near the floor |
+| Jump Rope | Beginner | 4 | In front of you, waist height, feet in frame |
+| Plank | Beginner | 7 | In front of you at floor level, 2 to 3 m away, whole body visible. Side-on is not supported yet |
 
-Sixteen distinct mistakes in total. Each model can also say "that looked fine"
+Each model can also say "that looked fine"
 or "I cannot see enough of you to tell".
 
 All of this lives in one file, `content.py`. Every mistake is written down once,
@@ -98,7 +148,7 @@ Exercise-Corrector/
 ├── requirements.txt
 │
 ├── exercises/
-│   └── squat/ lunge/ pushup/ deadlift/ bicep_curl/
+│   └── squat/ lunge/ pushup/      (old MediaPipe route, no page calls these)
 │       ├── ...Predictor.py      Turns joint positions into numbers to classify
 │       ├── RepCounter.py        Tracks where you are in the movement
 │       └── models/              The trained model and its settings files
@@ -108,7 +158,8 @@ Exercise-Corrector/
     ├── style.css           Every bit of the design
     ├── favicon.svg         Plus .ico and apple-touch-icon
     └── js/
-        ├── pose_client.js  Talks to MediaPipe and to the server
+        ├── v5_client.js    Sends frames, clips and photos to the server
+        ├── pose_client.js  The old MediaPipe route, no longer loaded
         ├── app.js          Runs the analyser page
         ├── dashboard.js    Draws the charts and history
         ├── api.js          Small helper for calling the server
@@ -127,6 +178,7 @@ cd Exercise-Corrector
 python3.11 -m venv .venv
 source .venv/bin/activate          # on Windows: .venv\Scripts\activate
 
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 python app.py
 ```
@@ -201,6 +253,16 @@ If you want to build something on top of this, everything comes back as JSON.
 | POST | `/api/analyze_image` | Judges a single photo in more detail |
 | POST | `/api/reset_counter` | Sets the rep count back to zero |
 
+**Squat, lunge and push-up (v5 pipeline)**, sent as `multipart/form-data` with
+`exercise_type`:
+
+| Method | Address | What it does |
+|---|---|---|
+| POST | `/api/v5/live_frame` | One webcam JPEG (`frame`) and its time in ms (`t`); returns the skeleton and any rep just judged |
+| POST | `/api/v5/analyze_video` | Uploads a clip (`video`) and starts a job |
+| GET | `/api/v5/jobs/<id>` | The job's progress, then every rep's verdict and the skeleton for each frame |
+| POST | `/api/v5/analyze_image` | One photo (`image`), judged with the rule checks |
+
 **Your sessions**
 
 | Method | Address | What it does |
@@ -236,11 +298,12 @@ Here is what comes back while you are mid-set:
 
 ## What gets stored, and what does not
 
-Never leaves your device: your webcam feed, any video you upload, any photo you
-upload.
+The webcam frames, uploaded video or photo are
+sent to the server, because the pose model runs there. Frames and photos are
+analysed in memory and dropped; an uploaded video sits in a temporary file
+while it is analysed and is deleted straight after. None of it is stored.
 
-Sent to the server: 33 joint positions per frame, which are just numbers, plus
-which exercise you chose. When you finish a set it also saves how long it took,
+When you finish a set the server saves how long it took,
 how many reps you did, how many were clean, and which mistakes came up.
 
 There are no accounts, no email addresses and no passwords. The first time you
@@ -296,14 +359,15 @@ and `video_processor.py`. Both are left over from an earlier version and can be
 deleted.
 
 Once `video_processor.py` is gone, these can come out of `requirements.txt`,
-because the work they used to do now happens in the browser:
+because the work they used to do now happens elsewhere:
 
 ```
-opencv-python, mediapipe, tqdm, pillow
+mediapipe, tqdm, pillow
 ```
 
-Which leaves flask, werkzeug, tensorflow, numpy, joblib and scikit-learn. Worth
-double checking that nothing in your model training still needs them first.
+With `exercises/` unused, tensorflow, joblib and scikit-learn can go too. Keep
+opencv-python, which the `cv_v5/` pipeline needs. Worth double checking that
+nothing in your model training still needs the others first.
 
 ## What it cannot do
 
@@ -323,6 +387,6 @@ If something hurts, stop, and go talk to an actual coach or physio.
 
 ## Credits
 
-Body tracking by [MediaPipe](https://ai.google.dev/edge/mediapipe).
-The models run on [TensorFlow](https://www.tensorflow.org/).
+Body tracking by [YOLO11](https://docs.ultralytics.com/tasks/pose/).
+The models run on [PyTorch](https://pytorch.org/).
 Icons from [Bootstrap Icons](https://icons.getbootstrap.com/).

@@ -9,35 +9,36 @@
     <div class="container">
         <span class="eyebrow eyebrow--light"><span class="eyebrow-dot"></span>Privacy</span>
         <h1>What is stored, and what never is</h1>
-        <p class="page-lead">Short version: your video stays on your device, and your history is tied to an
-            anonymous cookie you can clear at any time.</p>
+        <p class="page-lead">Short version: camera frames and videos are analysed and then discarded, never
+            stored, and your history is tied to an anonymous cookie you can clear at any time.</p>
     </div>
 </section>
 
 <div class="container container--narrow page-body">
 
     <section class="panel">
-        <div class="panel-title"><i class="bi bi-eye-slash"></i>What never leaves your device</div>
+        <div class="panel-title"><i class="bi bi-cpu"></i>Analysed on the server, then discarded</div>
         <ul class="check-list">
-            <li><i class="bi bi-check-circle-fill"></i>Your webcam stream</li>
-            <li><i class="bi bi-check-circle-fill"></i>Any video file you upload for analysis</li>
-            <li><i class="bi bi-check-circle-fill"></i>Any photo you upload for analysis</li>
+            <li><i class="bi bi-check-circle-fill"></i>Webcam frames are sent to the server, analysed in memory and
+                discarded straight away</li>
+            <li><i class="bi bi-check-circle-fill"></i>An uploaded video is held in a temporary file while it is
+                analysed, then deleted</li>
+            <li><i class="bi bi-check-circle-fill"></i>An uploaded photo is analysed in memory and discarded</li>
         </ul>
-        <p class="panel-note">Pose detection runs in your browser. Files you select are read locally and are never
-            transmitted.</p>
+        <p class="panel-note">Every exercise uses a detailed pose model that runs on the server. No image or
+            video is kept after the analysis, and none is ever written to your history.</p>
     </section>
 
     <section class="panel">
         <div class="panel-title"><i class="bi bi-upload"></i>What is sent to the server</div>
         <ul class="check-list">
-            <li><i class="bi bi-check-circle-fill"></i>{{ site_stats.landmarks }} joint coordinates per analysed
-                frame, as plain numbers</li>
+            <li><i class="bi bi-check-circle-fill"></i>The camera frames, video or photo being analysed (see
+                above)</li>
             <li><i class="bi bi-check-circle-fill"></i>Which exercise you selected</li>
-            <li><i class="bi bi-check-circle-fill"></i>When you finish a set: its duration, rep count, clean-rep
-                count and fault tally</li>
+            <li><i class="bi bi-check-circle-fill"></i>When you finish a set: its duration, rep or window count,
+                clean count and fault tally</li>
         </ul>
-        <p class="panel-note">Coordinates are used to run the classifier for that frame and are not written to
-            disk.</p>
+        <p class="panel-note">Frames are used for the analysis only and are not stored.</p>
     </section>
 
     <section class="panel">

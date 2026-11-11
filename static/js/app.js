@@ -1,14 +1,18 @@
 // static/js/app.js
-// Analyser page controller. Runs MediaPipe pose detection in the browser
-// (via pose_client.js), sends landmarks to the Flask backend, and posts
-// each finished set to the sessions API.
+// Analyser page controller, with two engines behind it:
+//   v5 (every exercise): the Exercise-Corrector pipeline runs on the server
+//     via v5_client.js. It finds the pose itself and returns one verdict per
+//     finished rep, or per 2 second window for jump rope and plank.
+//   legacy (no exercise today): MediaPipe pose runs in the browser via
+//     pose_client.js and the landmarks are classified frame by frame. That
+//     file is only imported if an exercise needs it, since it loads from a CDN.
+// Each finished set is posted to the sessions API.
+
+import { loadModel, resetCounter, postSession, fetchStats } from './api.js';
 
 import {
-  initPose, detectImage, detectVideo,
-  loadModel, analyzeFrame, analyzeImage, resetCounter
-} from './pose_client.js';
-
-import { postSession, fetchStats } from './api.js';
+  drawSkeleton17, sendLiveFrame, analyzeVideoFile, analyzeImageFile
+} from './v5_client.js';
 
 // ---- Config ----
 const ANALYZE_INTERVAL_MS = 150;   // throttle server calls (~6-7 per second)
@@ -32,6 +36,15 @@ let lastAnalyze = 0;
 let lastTimestamp = 0;
 let timerId = null;
 let faultLabels = {};
+let currentEngine = 'legacy';
+let currentUnit = 'rep';
+let pose = null;                   // pose_client.js, once a legacy exercise needs it
+
+// v5 pipeline state: the chosen files, and the judged clip being played back.
+const v5 = { videoFile: null, imageFile: null, result: null, revealed: 0 };
+const isV5 = () => currentEngine === 'v5';
+const isWindow = () => currentUnit === 'window';
+const unitWord = (n) => `${isWindow() ? 'window' : 'rep'}${n === 1 ? '' : 's'}`;
 
 const stats = { good: 0, bad: 0, total: 0, prevRep: 0, faults: {} };
 const session = { active: false, mode: null, exercise: null, startedAt: null, startMs: 0 };
@@ -75,7 +88,9 @@ async function refreshTotals() {
   document.querySelectorAll('[data-pb]').forEach(el => {
     const reps = (s.personalBests || {})[el.dataset.pb];
     if (reps) {
-      el.innerHTML = `<i class="bi bi-trophy-fill"></i>Best ${reps} reps`;
+      const card = el.closest('.exercise-card');
+      const word = card && card.dataset.unit === 'window' ? 'windows' : 'reps';
+      el.innerHTML = `<i class="bi bi-trophy-fill"></i>Best ${reps} ${word}`;
       el.classList.remove('hidden');
     } else {
       el.classList.add('hidden');
@@ -108,7 +123,7 @@ async function endSession(announce = true) {
 
   const durationSec = Math.round((Date.now() - session.startMs) / 1000);
   if (stats.total < 1) {
-    if (announce) toast('No reps counted, nothing saved', 'bi-info-circle-fill');
+    if (announce) toast(`No ${unitWord(2)} counted, nothing saved`, 'bi-info-circle-fill');
     return;
   }
 
@@ -136,7 +151,7 @@ async function endSession(announce = true) {
     const top = Object.entries(stats.faults).sort((a, b) => b[1] - a[1])[0];
     const label = top ? (faultLabels[top[0]] || top[0].replace(/_/g, ' ')) : null;
     const note = label ? ` \u00b7 mostly ${label.toLowerCase()}` : '';
-    toast(`Saved: ${stats.total} reps, ${accuracy}% clean${note}`);
+    toast(`Saved: ${stats.total} ${unitWord(stats.total)}, ${accuracy}% clean${note}`);
   }
 }
 
@@ -248,6 +263,33 @@ function updateReps(result, overlayId) {
   }
 }
 
+// ---- Counter overlay -------------------------------------------------------
+// Reps for most exercises, jumps for jump rope, held seconds for a plank.
+function counterLabel() {
+  if (currentExercise === 'jump_rope') return 'Jumps';
+  if (currentExercise === 'plank') return 'Hold';
+  return 'Reps';
+}
+
+function setCounter(overlayId, value) {
+  const overlay = $(overlayId);
+  if (!overlay) return;
+  overlay.querySelector('.rep-number').textContent =
+    currentExercise === 'plank' ? `${Math.floor(value || 0)}s` : (value || 0);
+}
+
+function applyUnitLabels() {
+  ['rep-counter-overlay', 'video-rep-counter-overlay'].forEach(id => {
+    $(id).querySelector('.rep-label').textContent = counterLabel();
+    setCounter(id, 0);
+  });
+  $('stat-reps-label').textContent = isWindow() ? 'Windows' : 'Reps';
+  $('reset-reps-label').textContent = isWindow() ? 'Reset' : 'Reset reps';
+  // v5 reports a 0-100 score per rep rather than a per-frame confidence.
+  document.querySelector('.confidence-label').textContent =
+    !isV5() ? 'Confidence' : (isWindow() ? 'Window score' : 'Rep score');
+}
+
 function renderStats() {
   $('stat-reps').textContent = stats.total;
   $('stat-good').textContent = stats.good;
@@ -306,10 +348,18 @@ function sizeCanvasTo(canvas, mediaEl) {
 document.querySelectorAll('.exercise-card').forEach(card => {
   if (card.classList.contains('disabled')) return;
   card.addEventListener('click', async () => {
+    // Anything running or already judged belongs to the previous exercise.
+    await stopWebcam();
+    await stopVideo();
+    resetStats();
+    v5.result = null;
     document.querySelectorAll('.exercise-card')
       .forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
     currentExercise = card.dataset.exercise;
+    currentEngine = card.dataset.engine || 'legacy';
+    currentUnit = card.dataset.unit || 'rep';
+    applyUnitLabels();
 
     $('stage-exercise-name').textContent = card.dataset.name || currentExercise;
     $('stage-exercise-icon').className = `bi ${card.dataset.icon || 'bi-activity'}`;
@@ -318,8 +368,12 @@ document.querySelectorAll('.exercise-card').forEach(card => {
       `Read the ${(card.dataset.name || '').toLowerCase()} form guide`;
 
     setLoading(true, 'Loading model...');
-    if (!poseReady) {
-      try { await initPose(); poseReady = true; }
+    if (!isV5() && !poseReady) {
+      try {
+        pose = await import('./pose_client.js');
+        await pose.initPose();
+        poseReady = true;
+      }
       catch (e) { setLoading(false); toast('Could not start pose detection', 'bi-exclamation-triangle-fill'); return; }
     }
     const res = await loadModel(currentExercise);
@@ -327,6 +381,14 @@ document.querySelectorAll('.exercise-card').forEach(card => {
     if (!res.success) {
       toast(res.error || 'Model failed to load', 'bi-exclamation-triangle-fill');
       return;
+    }
+
+    // One photo cannot show jump rope, so the option goes away.
+    const photoOk = card.dataset.photo !== 'no';
+    $('image-btn').classList.toggle('hidden', !photoOk);
+    if (!photoOk && !$('image-mode').classList.contains('hidden')) {
+      hide($('image-mode'));
+      hide($('analysis-section'));
     }
 
     show($('input-mode-selection'));
@@ -345,6 +407,7 @@ async function switchMode(mode) {
   ['webcam-mode', 'video-mode', 'image-mode'].forEach(id => hide($(id)));
   resetStats();
   updateStatus(null);
+  v5.result = null;
   if (mode === 'webcam') show($('webcam-mode'));
   if (mode === 'video') show($('video-mode'));
   if (mode === 'image') show($('image-mode'));
@@ -357,8 +420,8 @@ $('stop-webcam').addEventListener('click', stopWebcam);
 $('reset-reps').addEventListener('click', async () => {
   await resetCounter(currentExercise);
   resetStats();
-  $('rep-counter-overlay').querySelector('.rep-number').textContent = '0';
-  toast('Rep counter reset', 'bi-arrow-counterclockwise');
+  setCounter('rep-counter-overlay', 0);
+  toast(isWindow() ? 'Counter reset' : 'Rep counter reset', 'bi-arrow-counterclockwise');
 });
 
 async function startWebcam() {
@@ -387,9 +450,10 @@ async function startWebcam() {
   webcamRunning = true;
   hide($('start-webcam')); show($('stop-webcam')); show($('reset-reps'));
   resetStats();
+  setCounter('rep-counter-overlay', 0);
   await resetCounter(currentExercise);
   startSession('webcam');
-  webcamLoop();
+  isV5() ? webcamLoopV5() : webcamLoop();
 }
 
 async function stopWebcam() {
@@ -414,10 +478,10 @@ async function webcamLoop() {
     lastAnalyze = now;
     const ts = Math.max(now, lastTimestamp + 1);
     lastTimestamp = ts;
-    const landmarks = await detectVideo(video, ts);
+    const landmarks = await pose.detectVideo(video, ts);
     drawSkeleton(canvas, video, landmarks, showLm);
     if (landmarks) {
-      const result = await analyzeFrame(currentExercise, landmarks);
+      const result = await pose.analyzeFrame(currentExercise, landmarks);
       updateStatus(result);
       updateReps(result, 'rep-counter-overlay');
     } else {
@@ -425,6 +489,74 @@ async function webcamLoop() {
     }
   }
   requestAnimationFrame(webcamLoop);
+}
+
+// ---- v5 pipeline: per-rep verdicts ------------------------------------------
+// The server returns one verdict per finished rep or 2 second window. Counted
+// ones go into the set's stats; the latest verdict drives the status panel.
+function applyV5Rep(rep, overlayId) {
+  const fb = rep.feedback || {};
+  if (rep.counted) {
+    stats.total += 1;
+    if (rep.correct) {
+      stats.good += 1;
+    } else {
+      stats.bad += 1;
+      const key = fb.key || (rep.faults[0] && rep.faults[0].key) || 'form_issue';
+      stats.faults[key] = (stats.faults[key] || 0) + 1;
+    }
+    stats.prevRep = stats.total;
+    if (overlayId && !isWindow()) setCounter(overlayId, stats.total);
+    renderStats();
+  }
+  updateStatus({
+    success: true,
+    prediction: fb.key,
+    confidence: (rep.score || 0) / 100,
+    feedback: {
+      ...fb,
+      message: rep.counted
+        ? `${isWindow() ? '2 s window' : 'Rep'} ${rep.rep}: ${fb.message || ''}`
+        : (fb.message || '')
+    }
+  });
+}
+
+function waitingStatus(message) {
+  const badge = $('status-badge');
+  badge.textContent = 'Tracking';
+  badge.style.backgroundColor = COLOR_MAP.secondary;
+  $('status-message').textContent = message;
+  setStatusIcon('secondary');
+}
+
+async function webcamLoopV5() {
+  if (!webcamRunning) return;
+  const video = $('webcam');
+  const canvas = $('output-canvas');
+  // One frame in flight at a time: the frame rate follows the server's pose
+  // speed instead of queueing up stale frames.
+  const t = performance.now();
+  const result = await sendLiveFrame(currentExercise, video, t);
+  if (!webcamRunning) return;
+  if (result.success) {
+    drawSkeleton17(canvas, result.keypoints, $('show-landmarks').checked);
+    if (isWindow()) setCounter('rep-counter-overlay', result.jumps ?? result.hold_seconds);
+    if (result.new_reps && result.new_reps.length) {
+      result.new_reps.forEach(rep => applyV5Rep(rep, 'rep-counter-overlay'));
+    } else if (!result.person) {
+      updateStatus({ success: false, message: 'Position yourself in frame' });
+    } else if (stats.total === 0) {
+      waitingStatus(isWindow()
+        ? 'Tracking you. Every 2 seconds are judged as you go.'
+        : 'Tracking you. Each rep is judged when you finish it.');
+    }
+  } else {
+    drawSkeleton17(canvas, null);
+    updateStatus({ success: false, message: result.error || 'Could not analyse the frame' });
+    await new Promise(r => setTimeout(r, 500));
+  }
+  requestAnimationFrame(webcamLoopV5);
 }
 
 // ---- Video upload mode -----------------------------------------------------
@@ -440,6 +572,8 @@ $('video-input').addEventListener('change', e => {
 });
 
 function loadVideoFile(file) {
+  v5.videoFile = file;
+  v5.result = null;
   const video = $('preview-video');
   video.src = URL.createObjectURL(file);
   hide($('upload-area')); show($('video-preview'));
@@ -456,15 +590,17 @@ $('pause-video').addEventListener('click', () => {
 $('resume-video').addEventListener('click', () => {
   videoPaused = false; $('preview-video').play();
   show($('pause-video')); hide($('resume-video'));
-  videoLoop();
+  isV5() ? videoLoopV5() : videoLoop();
 });
 $('stop-video').addEventListener('click', stopVideo);
 $('upload-another-video').addEventListener('click', async () => {
   await stopVideo();
+  v5.result = null;
   show($('upload-area')); hide($('video-preview'));
 });
 
 async function startVideoAnalysis() {
+  if (isV5()) return startVideoAnalysisV5();
   const video = $('preview-video');
   await resetCounter(currentExercise);
   resetStats();
@@ -499,10 +635,10 @@ async function videoLoop() {
     lastAnalyze = now;
     const ts = Math.max(now, lastTimestamp + 1);
     lastTimestamp = ts;
-    const landmarks = await detectVideo(video, ts);
+    const landmarks = await pose.detectVideo(video, ts);
     drawSkeleton(canvas, video, landmarks, showLm);
     if (landmarks) {
-      const result = await analyzeFrame(currentExercise, landmarks);
+      const result = await pose.analyzeFrame(currentExercise, landmarks);
       updateStatus(result);
       updateReps(result, 'video-rep-counter-overlay');
     }
@@ -512,6 +648,89 @@ async function videoLoop() {
     $('video-progress-fill').style.width = pct + '%';
   }
   requestAnimationFrame(videoLoop);
+}
+
+// v5: the server judges the whole clip first (the same pipeline that was
+// evaluated on Kaggle), then the clip plays back with the skeleton and
+// each rep's (or 2 second window's) verdict appearing as it finishes.
+async function startVideoAnalysisV5() {
+  const video = $('preview-video');
+  if (!v5.videoFile) { toast('Choose a video first', 'bi-info-circle-fill'); return; }
+
+  if (!v5.result) {
+    hide($('analyze-video')); show($('video-progress'));
+    const setProgress = (p, msg) => {
+      const pct = Math.round((p || 0) * 100);
+      $('progress-text').textContent = `${msg || 'Analysing'}: ${pct}%`;
+      $('progress-frames').textContent = 'Analysing on the server';
+      $('video-progress-fill').style.width = pct + '%';
+    };
+    setProgress(0, 'Uploading video');
+    const result = await analyzeVideoFile(currentExercise, v5.videoFile, setProgress);
+    if (!result.success) {
+      show($('analyze-video'));
+      toast(result.error || 'Video analysis failed', 'bi-exclamation-triangle-fill');
+      updateStatus({ success: false, message: result.error || 'Video analysis failed' });
+      return;
+    }
+    v5.result = result;
+    if (!result.reps_counted && result.reps.length) {
+      toast(isWindow()
+        ? 'This clip is under 2 seconds, so all of it was judged as one window'
+        : 'No full rep found, so the whole clip was judged as one', 'bi-info-circle-fill');
+    }
+  }
+
+  resetStats();
+  v5.revealed = 0;
+  setCounter('video-rep-counter-overlay', 0);
+  videoRunning = true; videoPaused = false;
+  hide($('analyze-video')); show($('pause-video')); show($('stop-video'));
+  show($('upload-another-video')); show($('video-progress'));
+  const flagged = v5.result.reps.length - v5.result.reps.filter(r => r.correct).length;
+  $('progress-frames').textContent = isWindow()
+    ? `${v5.result.reps_counted} 2 s ${unitWord(v5.result.reps_counted)} judged \u00b7 ${flagged} with faults`
+    : `${v5.result.reps_counted} reps judged \u00b7 ${flagged} with faults`;
+  startSession('video');
+  waitingStatus(isWindow()
+    ? 'Playing back. Each 2 second window is judged as it finishes.'
+    : 'Playing back. Each rep is judged as it finishes.');
+  video.currentTime = 0;
+  // Playback can be refused (autoplay rules, a background tab); the loop
+  // still follows the video once the user presses play on it.
+  video.play().catch(() => toast(`Press play on the video to see each ${unitWord(1)}`, 'bi-play-circle'));
+  videoLoopV5();
+}
+
+function videoLoopV5() {
+  if (!videoRunning || videoPaused || !v5.result) return;
+  const video = $('preview-video');
+  const canvas = $('video-output-canvas');
+  const res = v5.result;
+  const showLm = $('show-landmarks') ? $('show-landmarks').checked : true;
+
+  // The pipeline samples the clip at res.fps; show the matching skeleton.
+  const idx = Math.min(res.keypoints.length - 1, Math.max(0, Math.floor(video.currentTime * res.fps)));
+  drawSkeleton17(canvas, res.keypoints[idx], showLm);
+
+  // Reveal every rep whose end has been reached (all of them at the end).
+  const t = video.ended ? Infinity : video.currentTime;
+  while (v5.revealed < res.reps.length && res.reps[v5.revealed].end <= t) {
+    applyV5Rep(res.reps[v5.revealed], 'video-rep-counter-overlay');
+    v5.revealed += 1;
+  }
+  if (res.jump_times) {
+    setCounter('video-rep-counter-overlay', res.jump_times.filter(j => j <= t).length);
+  } else if (res.hold_seconds !== undefined) {
+    setCounter('video-rep-counter-overlay', Math.min(t, res.hold_seconds));
+  }
+
+  const pct = video.duration ? Math.round((video.currentTime / video.duration) * 100) : 0;
+  $('progress-text').textContent = 'Playback: ' + pct + '%';
+  $('video-progress-fill').style.width = pct + '%';
+
+  if (video.ended) { stopVideo(); return; }
+  requestAnimationFrame(videoLoopV5);
 }
 
 // ---- Image mode ------------------------------------------------------------
@@ -527,9 +746,11 @@ $('image-input').addEventListener('change', e => {
 });
 $('upload-another').addEventListener('click', () => {
   show($('image-upload-area')); hide($('image-preview')); hide($('image-results'));
+  hide($('v5-image-results'));
 });
 
 function loadImageFile(file) {
+  v5.imageFile = file;
   const img = $('original-image');
   img.src = URL.createObjectURL(file);
   hide($('image-upload-area')); show($('image-preview'));
@@ -539,8 +760,10 @@ $('analyze-image').addEventListener('click', async () => {
   const img = $('original-image');
   if (!img.complete) { await img.decode().catch(() => { }); }
 
+  if (isV5()) return analyzeImageV5(img);
+
   setLoading(true, 'Analyzing...');
-  const landmarks = await detectImage(img);
+  const landmarks = await pose.detectImage(img);
   if (!landmarks) {
     setLoading(false);
     updateStatus({ success: false, message: 'No pose detected in image' });
@@ -553,13 +776,70 @@ $('analyze-image').addEventListener('click', async () => {
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
   drawSkeleton(canvas, img, landmarks, true);
 
-  const result = await analyzeImage(currentExercise, landmarks);
+  const result = await pose.analyzeImage(currentExercise, landmarks);
   setLoading(false);
   updateStatus(result);
   populateImageResults(result);
 });
 
+// v5 on a photo: the server finds the pose and runs the rule checks that do
+// not need movement. Depth and the BiGRU judge whole reps, so they cannot, and
+// jump rope is not offered at all.
+async function analyzeImageV5(img) {
+  setLoading(true, 'Analyzing...');
+  const result = await analyzeImageFile(currentExercise, v5.imageFile);
+  setLoading(false);
+  if (!result.success) {
+    updateStatus({ success: false, message: result.error || 'No pose detected in image' });
+    return;
+  }
+  const canvas = $('analyzed-image');
+  sizeCanvasTo(canvas, img);
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  drawSkeleton17(canvas, result.keypoints, true, false);
+
+  updateStatus({
+    success: true, prediction: result.feedback.key,
+    confidence: (result.score || 0) / 100, feedback: result.feedback
+  });
+  populateImageResultsV5(result);
+}
+
+function populateImageResultsV5(result) {
+  hide($('image-results'));
+  const box = $('v5-image-results');
+  show(box);
+  const label = (k) => faultLabels[k] || k.replace(/_/g, ' ');
+  const flagged = new Set(result.faults.map(f => f.key));
+  const rows = result.checked.map(k => {
+    const p = Math.round((result.fused[k] || 0) * 100);
+    const bad = flagged.has(k);
+    return `<div class="analysis-card">
+        <div class="analysis-icon"><i class="bi ${bad ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'}"></i></div>
+        <div class="analysis-content">
+          <h4>${label(k)}</h4>
+          <p class="analysis-value">${bad ? 'Flagged' : 'Looks fine'}</p>
+          <p class="analysis-detail">Fault likelihood ${p}%</p>
+        </div>
+      </div>`;
+  });
+  rows.push(`<div class="analysis-card">
+      <div class="analysis-icon"><i class="bi bi-bullseye"></i></div>
+      <div class="analysis-content">
+        <h4>Overall</h4>
+        <p class="analysis-value">${result.correct ? 'No fault seen' : 'Fault seen'}</p>
+        <p class="analysis-detail">Score ${result.score} &middot; camera view: ${result.view || '-'}</p>
+      </div>
+    </div>`);
+  $('v5-image-grid').innerHTML = rows.join('');
+  const skipped = result.not_checked.map(label);
+  $('v5-image-note').textContent = skipped.length
+    ? `Not checked from a photo: ${skipped.join(', ').toLowerCase()}. These need a camera angle the photo does not have or real movement, so try a video for them.`
+    : '';
+}
+
 function populateImageResults(result) {
+  hide($('v5-image-results'));
   show($('image-results'));
   const d = result.analysis_details || {};
   const setText = (id, val) => { const el = $(id); if (el) el.textContent = val ?? '-'; };

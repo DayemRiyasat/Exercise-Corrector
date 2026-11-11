@@ -8,3 +8,9 @@ tensorflow==2.18.0
 tqdm==4.67.1
 werkzeug==3.1.3
 scikit-learn==1.4.2
+# Exercise-Corrector v5.1 pipeline (squat, push-up, lunge), see cv_v5/.
+# Install the CPU build of torch first so pip does not pull the 2 GB CUDA one:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+torch>=2.2
+ultralytics>=8.3
+scipy>=1.11

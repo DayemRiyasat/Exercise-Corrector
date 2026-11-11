@@ -35,7 +35,7 @@
                 <div class="head-stat-label">Faults tracked</div>
             </div>
             <a href="{{ url_for('analyze') }}" class="btn btn-success btn-sm head-stat-link">
-                <i class="bi bi-camera-video-fill"></i>Analyse this lift
+                <i class="bi bi-camera-video-fill"></i>Analyse this exercise
             </a>
         </div>
     </div>
@@ -60,7 +60,7 @@
                 <div class="panel-head">
                     <div>
                         <div class="panel-title"><i class="bi bi-1-circle"></i>Set up</div>
-                        <p class="panel-sub">Before the first rep</p>
+                        <p class="panel-sub">Before you start</p>
                     </div>
                 </div>
                 <ul class="check-list">
@@ -72,7 +72,7 @@
                 <div class="panel-head">
                     <div>
                         <div class="panel-title"><i class="bi bi-2-circle"></i>Execute</div>
-                        <p class="panel-sub">What a clean rep looks like</p>
+                        <p class="panel-sub">What {% if exercise.unit == 'window' %}clean form{% else %}a clean rep{% endif %} looks like</p>
                     </div>
                 </div>
                 <ol class="numbered-list">
@@ -110,7 +110,7 @@
 
         <aside class="detail-side">
             <div class="panel side-panel">
-                <div class="panel-title"><i class="bi bi-check-circle-fill"></i>A clean rep</div>
+                <div class="panel-title"><i class="bi bi-check-circle-fill"></i>{% if exercise.unit == 'window' %}Clean form{% else %}A clean rep{% endif %}</div>
                 <p class="side-clean">{{ clean.why }}</p>
                 <ul class="cue-list">
                     {% for tip in clean.tips %}<li><i class="bi bi-dot"></i>{{ tip }}</li>{% endfor %}
@@ -128,8 +128,8 @@
             </div>
 
             <div class="panel side-panel side-panel--cta">
-                <div class="panel-title"><i class="bi bi-camera-video-fill"></i>Ready to lift?</div>
-                <p>Load the {{ exercise.name|lower }} model and get corrections rep by rep.</p>
+                <div class="panel-title"><i class="bi bi-camera-video-fill"></i>Ready to start?</div>
+                <p>Load the {{ exercise.name|lower }} model and get corrections {% if exercise.unit == 'window' %}every two seconds{% else %}rep by rep{% endif %}.</p>
                 <a href="{{ url_for('analyze') }}" class="btn btn-success btn-sm">Start analysing</a>
             </div>
 

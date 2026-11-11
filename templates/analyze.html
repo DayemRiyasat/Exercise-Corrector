@@ -43,7 +43,8 @@
         <div class="exercise-grid">
             {% for ex in exercises %}
             <button type="button" class="exercise-card" data-exercise="{{ ex.slug }}" data-name="{{ ex.name }}"
-                data-icon="{{ ex.icon }}">
+                data-icon="{{ ex.icon }}" data-engine="{{ ex.engine or 'legacy' }}"
+                data-unit="{{ ex.unit }}" data-photo="{{ 'yes' if ex.photo else 'no' }}">
                 <span class="exercise-icon"><i class="bi {{ ex.icon }}"></i></span>
                 <span class="exercise-name">{{ ex.name }}</span>
                 <span class="exercise-meta">{{ ex.tagline }}</span>
@@ -76,7 +77,7 @@
             <button class="mode-btn mode-btn--clip" id="video-btn">
                 <span class="mode-icon"><i class="bi bi-film"></i></span>
                 <span class="mode-name">Video</span>
-                <span class="mode-desc">Upload a clip and review every rep</span>
+                <span class="mode-desc">Upload a clip and review all of it</span>
                 <span class="mode-go" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
             </button>
 
@@ -121,7 +122,7 @@
                     <button id="stop-webcam" class="btn btn-danger hidden"><i class="bi bi-stop-fill"></i>Stop
                         camera</button>
                     <button id="reset-reps" class="btn btn-warning hidden"><i
-                            class="bi bi-arrow-counterclockwise"></i>Reset reps</button>
+                            class="bi bi-arrow-counterclockwise"></i><span id="reset-reps-label">Reset reps</span></button>
                     <label class="checkbox-label">
                         <input type="checkbox" id="show-landmarks" checked>
                         Show landmarks
@@ -255,6 +256,12 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="v5-image-results" class="hidden">
+                    <h3>Posture breakdown</h3>
+                    <div class="analysis-grid" id="v5-image-grid"></div>
+                    <p class="section-foot" id="v5-image-note"></p>
+                </div>
             </div>
         </div>
 
@@ -291,7 +298,7 @@
                 <div class="stats-grid">
                     <div class="stat-item">
                         <div class="stat-value" id="stat-reps">0</div>
-                        <div class="stat-label">Reps</div>
+                        <div class="stat-label" id="stat-reps-label">Reps</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-value" id="stat-good">0</div>

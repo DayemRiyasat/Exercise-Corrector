@@ -1,0 +1,1118 @@
+{
+ "version": "exercise-corrector v6 (v5.1 + jump rope, plank)",
+ "exercises": [
+  "squat",
+  "pushup",
+  "lunge",
+  "jump_rope",
+  "plank"
+ ],
+ "window_exercises": [
+  "jump_rope",
+  "plank"
+ ],
+ "faults": {
+  "squat": [
+   "shallow",
+   "knees_inward",
+   "torso_lean",
+   "knees_over_toes",
+   "stance_wide",
+   "stance_narrow"
+  ],
+  "pushup": [
+   "shallow",
+   "hip_sag",
+   "hip_pike",
+   "head_down",
+   "no_lockout"
+  ],
+  "lunge": [
+   "shallow",
+   "knee_over_toes",
+   "torso_lean",
+   "back_knee_straight"
+  ],
+  "jump_rope": [
+   "no_jump",
+   "heels_only",
+   "side_to_side",
+   "no_wrist_circles"
+  ],
+  "plank": [
+   "hip_sag",
+   "hip_pike",
+   "head_down",
+   "head_up",
+   "on_knees",
+   "shoulders_shrugged",
+   "arms_wide"
+  ]
+ },
+ "fault_text": {
+  "shallow": "Go deeper",
+  "knees_inward": "Knees are caving in, push them out",
+  "torso_lean": "Torso leans too far forward, keep the chest up",
+  "knees_over_toes": "Knees travel too far past the toes, sit back",
+  "knee_over_toes": "Front knee travels past the toes, shorten or sit back",
+  "stance_wide": "Feet are too wide, bring them to shoulder width",
+  "stance_narrow": "Feet are too close, widen to shoulder width",
+  "hip_sag": "Hips are sagging, brace the core",
+  "hip_pike": "Hips are too high, keep a straight line",
+  "head_down": "Head is dropping, keep the neck neutral",
+  "no_lockout": "Arms do not fully extend at the top",
+  "back_knee_straight": "Back knee is not bending, drop it toward the floor",
+  "no_jump": "Feet are not leaving the floor, hop a little higher",
+  "heels_only": "Only the heels are moving, push off from the balls of the feet",
+  "side_to_side": "Jumping side to side, stay on one spot",
+  "no_wrist_circles": "Turn the rope with small wrist circles",
+  "head_up": "Head is lifted, look at the floor just ahead of your hands",
+  "on_knees": "Knees are on the floor, lift them and hold a straight line",
+  "shoulders_shrugged": "Shoulders are shrugged toward the ears, push them down",
+  "arms_wide": "Elbows are too wide, place them under the shoulders",
+  "form_issue": "Form differs from a clean rep"
+ },
+ "qevd_names": {
+  "squat": [
+   "squats"
+  ],
+  "pushup": [
+   "pushups"
+  ],
+  "lunge": [
+   "alternating forward lunges",
+   "lunges (left leg out in front)",
+   "lunges (right leg out in front)"
+  ],
+  "jump_rope": [
+   "air jump rope"
+  ],
+  "plank": [
+   "elbow plank"
+  ]
+ },
+ "pose_weights": "yolo11x-pose.pt",
+ "pose_imgsz": 640,
+ "fps": 16,
+ "rule_params": {
+  "squat": {
+   "shallow": {
+    "metric": "hip_drop",
+    "dir": "<",
+    "thr": 0.3133333333333333,
+    "views": [
+     "diag",
+     "front",
+     "side"
+    ],
+    "scale": 0.05505757033824921,
+    "fitted": true
+   },
+   "knees_inward": {
+    "metric": "knee_gap_ratio",
+    "dir": "<",
+    "thr": 0.875,
+    "views": [
+     "front"
+    ],
+    "scale": 0.07407208904623985,
+    "fitted": true
+   },
+   "torso_lean": {
+    "metric": "trunk_angle",
+    "dir": ">",
+    "thr": 50.0,
+    "views": [
+     "diag",
+     "side"
+    ],
+    "scale": 6.0,
+    "fitted": false
+   },
+   "knees_over_toes": {
+    "metric": "knee_fwd",
+    "dir": ">",
+    "thr": 0.45,
+    "views": [
+     "side"
+    ],
+    "scale": 0.08,
+    "fitted": false
+   },
+   "stance_wide": {
+    "metric": "stance_ratio",
+    "dir": ">",
+    "thr": 1.5,
+    "views": [
+     "front"
+    ],
+    "scale": 0.1194959208369255,
+    "fitted": true
+   },
+   "stance_narrow": {
+    "metric": "stance_ratio",
+    "dir": "<",
+    "thr": 0.91,
+    "views": [
+     "front"
+    ],
+    "scale": 0.12136977910995483,
+    "fitted": true
+   }
+  },
+  "pushup": {
+   "shallow": {
+    "metric": "shoulder_drop",
+    "dir": "<",
+    "thr": 0.27999999999999997,
+    "views": [
+     "diag",
+     "front",
+     "side"
+    ],
+    "scale": 0.06847264990210533,
+    "fitted": true
+   },
+   "hip_sag": {
+    "metric": "hip_dev",
+    "dir": ">",
+    "thr": 0.05,
+    "views": [
+     "diag",
+     "side"
+    ],
+    "scale": 0.02,
+    "fitted": false
+   },
+   "hip_pike": {
+    "metric": "hip_dev",
+    "dir": "<",
+    "thr": -0.06,
+    "views": [
+     "diag",
+     "side"
+    ],
+    "scale": 0.02,
+    "fitted": false
+   },
+   "no_lockout": {
+    "metric": "elbow_max",
+    "dir": "<",
+    "thr": 155.0,
+    "views": [
+     "side"
+    ],
+    "scale": 5.0,
+    "fitted": false
+   }
+  },
+  "lunge": {
+   "shallow": {
+    "metric": "hip_drop",
+    "dir": "<",
+    "thr": 0.2,
+    "views": [
+     "diag",
+     "front",
+     "side"
+    ],
+    "scale": 0.05022919923067093,
+    "fitted": true
+   },
+   "knee_over_toes": {
+    "metric": "front_knee_fwd",
+    "dir": ">",
+    "thr": 0.2,
+    "views": [
+     "side"
+    ],
+    "scale": 0.05602625943720341,
+    "fitted": true
+   },
+   "torso_lean": {
+    "metric": "trunk_angle",
+    "dir": ">",
+    "thr": 25.0,
+    "views": [
+     "diag",
+     "side"
+    ],
+    "scale": 6.0,
+    "fitted": false
+   },
+   "back_knee_straight": {
+    "metric": "back_knee_angle",
+    "dir": ">",
+    "thr": 135.0,
+    "views": [
+     "side"
+    ],
+    "scale": 8.0,
+    "fitted": false
+   }
+  },
+  "jump_rope": {
+   "no_jump": {
+    "metric": "ankle_lift",
+    "dir": "<",
+    "thr": 0.045,
+    "views": [
+     "diag",
+     "front",
+     "side"
+    ],
+    "scale": 0.028498680350447496,
+    "fitted": true
+   },
+   "side_to_side": {
+    "metric": "hip_sway",
+    "dir": ">",
+    "thr": 0.158,
+    "views": [
+     "diag",
+     "front"
+    ],
+    "scale": 0.04731028031185501,
+    "fitted": true
+   },
+   "no_wrist_circles": {
+    "metric": "wrist_motion",
+    "dir": "<",
+    "thr": 0.04,
+    "views": [
+     "diag",
+     "front",
+     "side"
+    ],
+    "scale": 0.017082087695598602,
+    "fitted": true
+   }
+  },
+  "plank": {
+   "hip_sag": {
+    "metric": "hip_dev",
+    "dir": ">",
+    "thr": 0.05,
+    "views": [
+     "diag",
+     "side"
+    ],
+    "scale": 0.01,
+    "fitted": true
+   },
+   "hip_pike": {
+    "metric": "hip_dev",
+    "dir": "<",
+    "thr": -0.06,
+    "views": [
+     "diag",
+     "side"
+    ],
+    "scale": 0.02,
+    "fitted": false
+   },
+   "head_down": {
+    "metric": "head_dev",
+    "dir": ">",
+    "thr": 0.25,
+    "views": [
+     "diag",
+     "side"
+    ],
+    "scale": 0.05,
+    "fitted": false
+   },
+   "head_up": {
+    "metric": "head_dev",
+    "dir": "<",
+    "thr": -0.325,
+    "views": [
+     "diag",
+     "side"
+    ],
+    "scale": 0.05167172336950898,
+    "fitted": true
+   },
+   "on_knees": {
+    "metric": "knee_angle",
+    "dir": "<",
+    "thr": 110.0,
+    "views": [
+     "diag",
+     "side"
+    ],
+    "scale": 4.0,
+    "fitted": true
+   },
+   "shoulders_shrugged": {
+    "metric": "shrug_ratio",
+    "dir": "<",
+    "thr": 0.41666666666666663,
+    "views": [
+     "front"
+    ],
+    "scale": 0.049332395195961,
+    "fitted": true
+   },
+   "arms_wide": {
+    "metric": "elbow_ratio",
+    "dir": ">",
+    "thr": 1.5091666666666668,
+    "views": [
+     "front"
+    ],
+    "scale": 0.08172065019607544,
+    "fitted": true
+   }
+  }
+ },
+ "fusion_thresholds": {
+  "squat": {
+   "shallow": 0.36,
+   "knees_inward": 0.8,
+   "torso_lean": 0.72,
+   "knees_over_toes": 0.45999999999999996,
+   "stance_wide": 0.45999999999999996,
+   "stance_narrow": 0.56,
+   "_correct": 0.48000000000000004
+  },
+  "pushup": {
+   "shallow": 0.3,
+   "hip_sag": 0.38,
+   "hip_pike": 0.3,
+   "head_down": 0.6799999999999999,
+   "no_lockout": 0.5,
+   "_correct": 0.28
+  },
+  "lunge": {
+   "shallow": 0.48,
+   "knee_over_toes": 0.6,
+   "torso_lean": 0.5800000000000001,
+   "back_knee_straight": 0.62,
+   "_correct": 0.41000000000000003
+  },
+  "jump_rope": {
+   "no_jump": 0.76,
+   "heels_only": 0.76,
+   "side_to_side": 0.56,
+   "no_wrist_circles": 0.42,
+   "_correct": 0.22
+  },
+  "plank": {
+   "hip_sag": 0.5,
+   "hip_pike": 0.76,
+   "head_down": 0.6,
+   "head_up": 0.8,
+   "on_knees": 0.38,
+   "shoulders_shrugged": 0.8,
+   "arms_wide": 0.8,
+   "_correct": 0.29000000000000004
+  }
+ },
+ "fusion_weights": {
+  "rule": 0.45,
+  "gru": 0.35,
+  "cnn": 0.2
+ },
+ "severity": {
+  "shallow": 0.6,
+  "knees_inward": 0.7,
+  "torso_lean": 0.5,
+  "knees_over_toes": 0.4,
+  "knee_over_toes": 0.5,
+  "stance_wide": 0.3,
+  "stance_narrow": 0.3,
+  "hip_sag": 0.7,
+  "hip_pike": 0.5,
+  "head_down": 0.3,
+  "no_lockout": 0.4,
+  "back_knee_straight": 0.5,
+  "form_issue": 0.4,
+  "no_jump": 0.6,
+  "heels_only": 0.4,
+  "side_to_side": 0.3,
+  "no_wrist_circles": 0.3,
+  "head_up": 0.3,
+  "on_knees": 0.6,
+  "shoulders_shrugged": 0.3,
+  "arms_wide": 0.3
+ },
+ "score": "100 x product over faults of (1 - severity x fused probability above 0.15)",
+ "test_results": [
+  {
+   "exercise": "squat",
+   "fault": "shallow",
+   "test_clips": 385,
+   "positives": 144,
+   "rule_coverage": 1.0,
+   "rule_AP": 0.548,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.875,
+   "cnn_coverage": 0.98,
+   "cnn_AP": 0.843,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.774,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.745,
+   "fused_precision": 0.693,
+   "fused_recall": 0.785,
+   "fused_F1": 0.736,
+   "fused_no_cnn_precision": 0.634,
+   "fused_no_cnn_recall": 0.757,
+   "fused_no_cnn_F1": 0.69,
+   "threshold": 0.36
+  },
+  {
+   "exercise": "squat",
+   "fault": "knees_inward",
+   "test_clips": 0,
+   "positives": 0,
+   "rule_coverage": NaN,
+   "rule_AP": NaN,
+   "gru_coverage": NaN,
+   "gru_AP": NaN,
+   "cnn_coverage": NaN,
+   "cnn_AP": NaN,
+   "fused_coverage": NaN,
+   "fused_AP": NaN,
+   "fused_no_cnn_coverage": NaN,
+   "fused_no_cnn_AP": NaN,
+   "fused_precision": NaN,
+   "fused_recall": NaN,
+   "fused_F1": NaN,
+   "fused_no_cnn_precision": NaN,
+   "fused_no_cnn_recall": NaN,
+   "fused_no_cnn_F1": NaN,
+   "threshold": 0.8
+  },
+  {
+   "exercise": "squat",
+   "fault": "torso_lean",
+   "test_clips": 376,
+   "positives": 63,
+   "rule_coverage": 0.0,
+   "rule_AP": NaN,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.695,
+   "cnn_coverage": 0.98,
+   "cnn_AP": 0.379,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.613,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.695,
+   "fused_precision": 0.603,
+   "fused_recall": 0.651,
+   "fused_F1": 0.626,
+   "fused_no_cnn_precision": 0.533,
+   "fused_no_cnn_recall": 0.778,
+   "fused_no_cnn_F1": 0.632,
+   "threshold": 0.72
+  },
+  {
+   "exercise": "squat",
+   "fault": "knees_over_toes",
+   "test_clips": 376,
+   "positives": 68,
+   "rule_coverage": 0.0,
+   "rule_AP": NaN,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.515,
+   "cnn_coverage": 0.98,
+   "cnn_AP": 0.342,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.501,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.515,
+   "fused_precision": 0.384,
+   "fused_recall": 0.706,
+   "fused_F1": 0.497,
+   "fused_no_cnn_precision": 0.345,
+   "fused_no_cnn_recall": 0.735,
+   "fused_no_cnn_F1": 0.469,
+   "threshold": 0.45999999999999996
+  },
+  {
+   "exercise": "squat",
+   "fault": "stance_wide",
+   "test_clips": 385,
+   "positives": 71,
+   "rule_coverage": 0.99,
+   "rule_AP": 0.517,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.74,
+   "cnn_coverage": 0.98,
+   "cnn_AP": 0.635,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.64,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.665,
+   "fused_precision": 0.621,
+   "fused_recall": 0.507,
+   "fused_F1": 0.558,
+   "fused_no_cnn_precision": 0.552,
+   "fused_no_cnn_recall": 0.521,
+   "fused_no_cnn_F1": 0.536,
+   "threshold": 0.45999999999999996
+  },
+  {
+   "exercise": "squat",
+   "fault": "stance_narrow",
+   "test_clips": 385,
+   "positives": 67,
+   "rule_coverage": 0.99,
+   "rule_AP": 0.338,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.843,
+   "cnn_coverage": 0.98,
+   "cnn_AP": 0.709,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.819,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.818,
+   "fused_precision": 0.593,
+   "fused_recall": 0.806,
+   "fused_F1": 0.684,
+   "fused_no_cnn_precision": 0.437,
+   "fused_no_cnn_recall": 0.821,
+   "fused_no_cnn_F1": 0.57,
+   "threshold": 0.56
+  },
+  {
+   "exercise": "pushup",
+   "fault": "shallow",
+   "test_clips": 171,
+   "positives": 72,
+   "rule_coverage": 1.0,
+   "rule_AP": 0.796,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.879,
+   "cnn_coverage": 0.89,
+   "cnn_AP": 0.896,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.889,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.873,
+   "fused_precision": 0.766,
+   "fused_recall": 0.819,
+   "fused_F1": 0.792,
+   "fused_no_cnn_precision": 0.744,
+   "fused_no_cnn_recall": 0.806,
+   "fused_no_cnn_F1": 0.773,
+   "threshold": 0.3
+  },
+  {
+   "exercise": "pushup",
+   "fault": "hip_sag",
+   "test_clips": 37,
+   "positives": 14,
+   "rule_coverage": 0.0,
+   "rule_AP": NaN,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.338,
+   "cnn_coverage": 0.73,
+   "cnn_AP": 0.333,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.337,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.338,
+   "fused_precision": 0.294,
+   "fused_recall": 0.357,
+   "fused_F1": 0.323,
+   "fused_no_cnn_precision": 0.294,
+   "fused_no_cnn_recall": 0.357,
+   "fused_no_cnn_F1": 0.323,
+   "threshold": 0.38
+  },
+  {
+   "exercise": "pushup",
+   "fault": "hip_pike",
+   "test_clips": 49,
+   "positives": 23,
+   "rule_coverage": 0.0,
+   "rule_AP": NaN,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.746,
+   "cnn_coverage": 0.82,
+   "cnn_AP": 0.45,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.743,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.746,
+   "fused_precision": 0.576,
+   "fused_recall": 0.826,
+   "fused_F1": 0.679,
+   "fused_no_cnn_precision": 0.6,
+   "fused_no_cnn_recall": 0.783,
+   "fused_no_cnn_F1": 0.679,
+   "threshold": 0.3
+  },
+  {
+   "exercise": "pushup",
+   "fault": "head_down",
+   "test_clips": 35,
+   "positives": 6,
+   "rule_coverage": 0.0,
+   "rule_AP": NaN,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.958,
+   "cnn_coverage": 0.77,
+   "cnn_AP": 0.111,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.958,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.958,
+   "fused_precision": 0.667,
+   "fused_recall": 1.0,
+   "fused_F1": 0.8,
+   "fused_no_cnn_precision": 0.667,
+   "fused_no_cnn_recall": 1.0,
+   "fused_no_cnn_F1": 0.8,
+   "threshold": 0.6799999999999999
+  },
+  {
+   "exercise": "pushup",
+   "fault": "no_lockout",
+   "test_clips": 0,
+   "positives": 0,
+   "rule_coverage": NaN,
+   "rule_AP": NaN,
+   "gru_coverage": NaN,
+   "gru_AP": NaN,
+   "cnn_coverage": NaN,
+   "cnn_AP": NaN,
+   "fused_coverage": NaN,
+   "fused_AP": NaN,
+   "fused_no_cnn_coverage": NaN,
+   "fused_no_cnn_AP": NaN,
+   "fused_precision": NaN,
+   "fused_recall": NaN,
+   "fused_F1": NaN,
+   "fused_no_cnn_precision": NaN,
+   "fused_no_cnn_recall": NaN,
+   "fused_no_cnn_F1": NaN,
+   "threshold": 0.5
+  },
+  {
+   "exercise": "lunge",
+   "fault": "shallow",
+   "test_clips": 321,
+   "positives": 93,
+   "rule_coverage": 1.0,
+   "rule_AP": 0.61,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.749,
+   "cnn_coverage": 0.98,
+   "cnn_AP": 0.488,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.652,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.71,
+   "fused_precision": 0.522,
+   "fused_recall": 0.903,
+   "fused_F1": 0.661,
+   "fused_no_cnn_precision": 0.475,
+   "fused_no_cnn_recall": 0.935,
+   "fused_no_cnn_F1": 0.63,
+   "threshold": 0.48
+  },
+  {
+   "exercise": "lunge",
+   "fault": "knee_over_toes",
+   "test_clips": 222,
+   "positives": 35,
+   "rule_coverage": 0.0,
+   "rule_AP": NaN,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.648,
+   "cnn_coverage": 0.98,
+   "cnn_AP": 0.235,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.741,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.648,
+   "fused_precision": 0.833,
+   "fused_recall": 0.429,
+   "fused_F1": 0.566,
+   "fused_no_cnn_precision": 0.545,
+   "fused_no_cnn_recall": 0.686,
+   "fused_no_cnn_F1": 0.608,
+   "threshold": 0.6
+  },
+  {
+   "exercise": "lunge",
+   "fault": "torso_lean",
+   "test_clips": 224,
+   "positives": 50,
+   "rule_coverage": 0.01,
+   "rule_AP": NaN,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.853,
+   "cnn_coverage": 0.98,
+   "cnn_AP": 0.379,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.759,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.853,
+   "fused_precision": 0.795,
+   "fused_recall": 0.7,
+   "fused_F1": 0.745,
+   "fused_no_cnn_precision": 0.826,
+   "fused_no_cnn_recall": 0.76,
+   "fused_no_cnn_F1": 0.792,
+   "threshold": 0.5800000000000001
+  },
+  {
+   "exercise": "lunge",
+   "fault": "back_knee_straight",
+   "test_clips": 222,
+   "positives": 45,
+   "rule_coverage": 0.0,
+   "rule_AP": NaN,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.855,
+   "cnn_coverage": 0.98,
+   "cnn_AP": 0.511,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.792,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.855,
+   "fused_precision": 0.719,
+   "fused_recall": 0.911,
+   "fused_F1": 0.804,
+   "fused_no_cnn_precision": 0.645,
+   "fused_no_cnn_recall": 0.889,
+   "fused_no_cnn_F1": 0.748,
+   "threshold": 0.62
+  },
+  {
+   "exercise": "jump_rope",
+   "fault": "no_jump",
+   "test_clips": 197,
+   "positives": 10,
+   "rule_coverage": 1.0,
+   "rule_AP": 0.544,
+   "gru_coverage": 1.0,
+   "gru_AP": 1.0,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 1.0,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 1.0,
+   "fused_precision": 0.909,
+   "fused_recall": 1.0,
+   "fused_F1": 0.952,
+   "fused_no_cnn_precision": 0.909,
+   "fused_no_cnn_recall": 1.0,
+   "fused_no_cnn_F1": 0.952,
+   "threshold": 0.76
+  },
+  {
+   "exercise": "jump_rope",
+   "fault": "heels_only",
+   "test_clips": 197,
+   "positives": 11,
+   "rule_coverage": 0.0,
+   "rule_AP": NaN,
+   "gru_coverage": 1.0,
+   "gru_AP": 1.0,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 1.0,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 1.0,
+   "fused_precision": 0.917,
+   "fused_recall": 1.0,
+   "fused_F1": 0.957,
+   "fused_no_cnn_precision": 0.917,
+   "fused_no_cnn_recall": 1.0,
+   "fused_no_cnn_F1": 0.957,
+   "threshold": 0.76
+  },
+  {
+   "exercise": "jump_rope",
+   "fault": "side_to_side",
+   "test_clips": 197,
+   "positives": 110,
+   "rule_coverage": 1.0,
+   "rule_AP": 0.989,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.999,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.996,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.996,
+   "fused_precision": 0.965,
+   "fused_recall": 1.0,
+   "fused_F1": 0.982,
+   "fused_no_cnn_precision": 0.965,
+   "fused_no_cnn_recall": 1.0,
+   "fused_no_cnn_F1": 0.982,
+   "threshold": 0.56
+  },
+  {
+   "exercise": "jump_rope",
+   "fault": "no_wrist_circles",
+   "test_clips": 206,
+   "positives": 120,
+   "rule_coverage": 1.0,
+   "rule_AP": 0.922,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.995,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.991,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.991,
+   "fused_precision": 0.92,
+   "fused_recall": 0.958,
+   "fused_F1": 0.939,
+   "fused_no_cnn_precision": 0.92,
+   "fused_no_cnn_recall": 0.958,
+   "fused_no_cnn_F1": 0.939,
+   "threshold": 0.42
+  },
+  {
+   "exercise": "plank",
+   "fault": "hip_sag",
+   "test_clips": 531,
+   "positives": 135,
+   "rule_coverage": 0.04,
+   "rule_AP": 0.682,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.624,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.6,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.6,
+   "fused_precision": 0.424,
+   "fused_recall": 0.77,
+   "fused_F1": 0.547,
+   "fused_no_cnn_precision": 0.424,
+   "fused_no_cnn_recall": 0.77,
+   "fused_no_cnn_F1": 0.547,
+   "threshold": 0.5
+  },
+  {
+   "exercise": "plank",
+   "fault": "hip_pike",
+   "test_clips": 531,
+   "positives": 56,
+   "rule_coverage": 0.04,
+   "rule_AP": 0.045,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.563,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.563,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.563,
+   "fused_precision": 0.406,
+   "fused_recall": 0.696,
+   "fused_F1": 0.513,
+   "fused_no_cnn_precision": 0.406,
+   "fused_no_cnn_recall": 0.696,
+   "fused_no_cnn_F1": 0.513,
+   "threshold": 0.76
+  },
+  {
+   "exercise": "plank",
+   "fault": "head_down",
+   "test_clips": 531,
+   "positives": 63,
+   "rule_coverage": 0.04,
+   "rule_AP": NaN,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.839,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.839,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.839,
+   "fused_precision": 0.667,
+   "fused_recall": 0.952,
+   "fused_F1": 0.784,
+   "fused_no_cnn_precision": 0.667,
+   "fused_no_cnn_recall": 0.952,
+   "fused_no_cnn_F1": 0.784,
+   "threshold": 0.6
+  },
+  {
+   "exercise": "plank",
+   "fault": "head_up",
+   "test_clips": 531,
+   "positives": 49,
+   "rule_coverage": 0.04,
+   "rule_AP": 1.0,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.81,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.804,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.804,
+   "fused_precision": 0.467,
+   "fused_recall": 0.878,
+   "fused_F1": 0.61,
+   "fused_no_cnn_precision": 0.467,
+   "fused_no_cnn_recall": 0.878,
+   "fused_no_cnn_F1": 0.61,
+   "threshold": 0.8
+  },
+  {
+   "exercise": "plank",
+   "fault": "on_knees",
+   "test_clips": 531,
+   "positives": 83,
+   "rule_coverage": 0.04,
+   "rule_AP": 0.182,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.473,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.433,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.433,
+   "fused_precision": 0.308,
+   "fused_recall": 0.916,
+   "fused_F1": 0.461,
+   "fused_no_cnn_precision": 0.308,
+   "fused_no_cnn_recall": 0.916,
+   "fused_no_cnn_F1": 0.461,
+   "threshold": 0.38
+  },
+  {
+   "exercise": "plank",
+   "fault": "shoulders_shrugged",
+   "test_clips": 531,
+   "positives": 50,
+   "rule_coverage": 0.96,
+   "rule_AP": 0.161,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.526,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.468,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.468,
+   "fused_precision": 0.396,
+   "fused_recall": 0.72,
+   "fused_F1": 0.511,
+   "fused_no_cnn_precision": 0.396,
+   "fused_no_cnn_recall": 0.72,
+   "fused_no_cnn_F1": 0.511,
+   "threshold": 0.8
+  },
+  {
+   "exercise": "plank",
+   "fault": "arms_wide",
+   "test_clips": 531,
+   "positives": 41,
+   "rule_coverage": 0.96,
+   "rule_AP": 0.252,
+   "gru_coverage": 1.0,
+   "gru_AP": 0.567,
+   "cnn_coverage": 0.0,
+   "cnn_AP": NaN,
+   "fused_coverage": 1.0,
+   "fused_AP": 0.62,
+   "fused_no_cnn_coverage": 1.0,
+   "fused_no_cnn_AP": 0.62,
+   "fused_precision": 0.508,
+   "fused_recall": 0.732,
+   "fused_F1": 0.6,
+   "fused_no_cnn_precision": 0.508,
+   "fused_no_cnn_recall": 0.732,
+   "fused_no_cnn_F1": 0.6,
+   "threshold": 0.8
+  }
+ ],
+ "correct_auc": [
+  {
+   "exercise": "squat",
+   "test_clips": 385,
+   "correct_clips": 66,
+   "correct_threshold": 0.48000000000000004,
+   "gru_correct_AUC": 0.872,
+   "fused_correct_called_correct": 0.273,
+   "fused_incorrect_caught": 0.959,
+   "fused_balanced_acc": 0.616,
+   "fused_no_cnn_correct_called_correct": 0.167,
+   "fused_no_cnn_incorrect_caught": 0.966,
+   "fused_no_cnn_balanced_acc": 0.566
+  },
+  {
+   "exercise": "pushup",
+   "test_clips": 314,
+   "correct_clips": 7,
+   "correct_threshold": 0.28,
+   "gru_correct_AUC": 0.713,
+   "fused_correct_called_correct": 0.286,
+   "fused_incorrect_caught": 0.997,
+   "fused_balanced_acc": 0.641,
+   "fused_no_cnn_correct_called_correct": 0.286,
+   "fused_no_cnn_incorrect_caught": 0.993,
+   "fused_no_cnn_balanced_acc": 0.64
+  },
+  {
+   "exercise": "lunge",
+   "test_clips": 421,
+   "correct_clips": 81,
+   "correct_threshold": 0.41000000000000003,
+   "gru_correct_AUC": 0.945,
+   "fused_correct_called_correct": 0.852,
+   "fused_incorrect_caught": 0.891,
+   "fused_balanced_acc": 0.872,
+   "fused_no_cnn_correct_called_correct": 0.667,
+   "fused_no_cnn_incorrect_caught": 0.929,
+   "fused_no_cnn_balanced_acc": 0.798
+  },
+  {
+   "exercise": "jump_rope",
+   "test_clips": 206,
+   "correct_clips": 54,
+   "correct_threshold": 0.22,
+   "gru_correct_AUC": 0.991,
+   "fused_correct_called_correct": 0.815,
+   "fused_incorrect_caught": 0.98,
+   "fused_balanced_acc": 0.898,
+   "fused_no_cnn_correct_called_correct": 0.815,
+   "fused_no_cnn_incorrect_caught": 0.98,
+   "fused_no_cnn_balanced_acc": 0.898
+  },
+  {
+   "exercise": "plank",
+   "test_clips": 577,
+   "correct_clips": 54,
+   "correct_threshold": 0.29000000000000004,
+   "gru_correct_AUC": 0.853,
+   "fused_correct_called_correct": 0.0,
+   "fused_incorrect_caught": 0.99,
+   "fused_balanced_acc": 0.495,
+   "fused_no_cnn_correct_called_correct": 0.0,
+   "fused_no_cnn_incorrect_caught": 0.99,
+   "fused_no_cnn_balanced_acc": 0.495
+  }
+ ],
+ "trained_on": {
+  "qevd_parts": [
+   1,
+   2,
+   3,
+   4
+  ],
+  "ec3d": "https://github.com/Jacoo-Zhao/3D-Pose-Based-Feedback-For-Physical-Exercises.git"
+ },
+ "licence_note": "QEVD and FitCoach weights: research use only"
+}

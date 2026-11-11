@@ -58,6 +58,12 @@ const exerciseName = (slug) =>
 const exerciseIcon = (slug) =>
   ((state.stats && state.stats.labels && state.stats.labels[slug]) || {}).icon || 'bi-activity';
 
+const exerciseUnit = (slug) =>
+  ((state.stats && state.stats.labels && state.stats.labels[slug]) || {}).unit || 'rep';
+
+const exerciseRetired = (slug) =>
+  !!((state.stats && state.stats.labels && state.stats.labels[slug]) || {}).retired;
+
 const faultLabel = (key) =>
   ((state.stats && state.stats.faultLabels) || {})[key] ||
   String(key || '').replace(/_/g, ' ');
@@ -221,7 +227,7 @@ function renderFaults() {
   list.innerHTML = entries.map(([key, n], i) => `
     <div class="fault-row${i === 0 ? ' is-top' : ''}">
       <span class="fault-name">${esc(faultLabel(key))}</span>
-      <span class="fault-count">${n} rep${n === 1 ? '' : 's'}</span>
+      <span class="fault-count">${n} time${n === 1 ? '' : 's'}</span>
       <div class="fault-track">
         <div class="fault-fill" style="width:${Math.round((n / peak) * 100)}%"></div>
       </div>
@@ -236,7 +242,7 @@ function renderBreakdown() {
   $('exercise-breakdown').innerHTML = entries.map(([key, v]) => {
     const acc = v.reps ? Math.round((v.good / v.reps) * 100) : 0;
     return `
-      <a class="breakdown-card" href="/exercises/${encodeURIComponent(key)}">
+      <a class="breakdown-card" href="${exerciseRetired(key) ? '/exercises' : `/exercises/${encodeURIComponent(key)}`}">
         <div class="breakdown-head">
           <div class="breakdown-icon"><i class="bi ${exerciseIcon(key)}"></i></div>
           <div class="breakdown-name">${esc(exerciseName(key))}</div>
@@ -296,7 +302,7 @@ function renderHistory() {
         <div class="session-figures">
           <div class="session-figure">
             <div class="session-figure-value">${s.reps || 0}</div>
-            <div class="session-figure-label">Reps</div>
+            <div class="session-figure-label">${exerciseUnit(s.exercise) === 'window' ? 'Windows' : 'Reps'}</div>
           </div>
           <div class="session-figure">
             <div class="session-figure-value">${s.good || 0}</div>

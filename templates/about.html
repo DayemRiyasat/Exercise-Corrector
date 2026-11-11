@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}About &middot; ShapeForm{% endblock %}
-{% block description %}How ShapeForm works under the hood: browser-side pose detection, per-exercise neural networks, and what the system can and cannot see.{% endblock %}
+{% block description %}How ShapeForm works under the hood: server-side pose detection, per-exercise neural networks, and what the system can and cannot see.{% endblock %}
 
 {% block content %}
 
@@ -26,16 +26,16 @@
 
         <ol class="numbered-list numbered-list--lg">
             <li><span>1</span>Your browser captures a frame from the webcam, video file or photo you gave it.</li>
-            <li><span>2</span>MediaPipe Pose, running locally in the page, finds {{ site_stats.landmarks }} body
-                landmarks and returns their x, y and z positions.</li>
-            <li><span>3</span>Those coordinates alone are posted to the server. The image is discarded and never
-                leaves your machine.</li>
-            <li><span>4</span>A neural network trained for your chosen exercise turns the coordinates into features
-                and classifies the position, returning a label and a confidence score.</li>
-            <li><span>5</span>A per-exercise rep counter tracks the movement phase and increments only on a full
-                range of motion.</li>
-            <li><span>6</span>The label is matched to coaching copy and rendered on screen, roughly
-                {{ site_stats.checks_per_second }} times a second.</li>
+            <li><span>2</span>The frame goes to the server, where a YOLO11 pose model finds
+                {{ site_stats.landmarks }} body joints.</li>
+            <li><span>3</span>The joints are cleaned up over time: gaps are filled and jitter is smoothed out.</li>
+            <li><span>4</span>A rep counter follows how high the body is and marks where each rep starts, bottoms out
+                and finishes. Jump rope and plank have no reps, so they are cut into 2 second windows instead.</li>
+            <li><span>5</span>Every finished rep or window is judged as a whole: rules measure depth, knee
+                and hip angles, and a neural network trained on thousands of labelled reps looks at the full
+                movement. Their votes are combined into a verdict, named faults and a score out of 100.</li>
+            <li><span>6</span>The verdict is matched to coaching copy and shown on screen as soon as the rep
+                or window ends.</li>
         </ol>
     </section>
 

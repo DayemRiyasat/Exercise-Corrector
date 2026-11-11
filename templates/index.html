@@ -35,7 +35,7 @@
             </div>
 
             <div class="hero-chips">
-                <span class="hero-chip"><i class="bi bi-shield-lock"></i>Video never leaves your device</span>
+                <span class="hero-chip"><i class="bi bi-shield-lock"></i>Video is never stored</span>
                 <span class="hero-chip"><i class="bi bi-person-x"></i>No account</span>
                 <span class="hero-chip"><i class="bi bi-laptop"></i>Nothing to install</span>
             </div>
@@ -127,7 +127,7 @@
     <div class="container">
         <div class="block-head block-head--center" data-reveal>
             <span class="eyebrow"><span class="eyebrow-dot"></span>The library</span>
-            <h2>Five lifts, each with its own model</h2>
+            <h2>Five exercises, each with its own model</h2>
             <p class="block-lead">Every fault the model can name is documented, with what it costs you
                 and how to fix it.</p>
         </div>
@@ -164,16 +164,14 @@
         <div class="split">
             <div class="split-copy" data-reveal>
                 <span class="eyebrow"><span class="eyebrow-dot"></span>Privacy</span>
-                <h2>Your camera feed never gets uploaded</h2>
+                <h2>Your camera feed is never stored</h2>
                 <p class="block-lead">
-                    Pose detection runs inside your browser. The server only ever receives a list of
-                    anonymous joint coordinates, which cannot be reconstructed into a picture of you
-                    or your room.
+                    Every exercise is analysed by a pose model on the server, which looks at each frame and
+                    throws it away.
                 </p>
                 <ul class="check-list">
-                    <li><i class="bi bi-check-circle-fill"></i>Webcam frames and uploaded clips stay on your device</li>
-                    <li><i class="bi bi-check-circle-fill"></i>Only {{ site_stats.landmarks }} x/y/z coordinates per
-                        frame are sent</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Frames and clips are analysed, then discarded</li>
+                    <li><i class="bi bi-check-circle-fill"></i>Nothing you film is written to your history</li>
                     <li><i class="bi bi-check-circle-fill"></i>Sessions are tied to an anonymous cookie, not a name</li>
                     <li><i class="bi bi-check-circle-fill"></i>Clear your history from the dashboard at any time</li>
                 </ul>
@@ -196,16 +194,16 @@
                         <span class="pipe-dot"><i class="bi bi-diagram-3-fill"></i></span>
                         <div>
                             <h4>Pose detection</h4>
-                            <p>MediaPipe extracts {{ site_stats.landmarks }} landmarks</p>
+                            <p>YOLO11 pose finds {{ site_stats.landmarks }} body joints on the server</p>
                         </div>
-                        <span class="pipe-tag pipe-tag--local">On device</span>
+                        <span class="pipe-tag pipe-tag--server">Server</span>
                     </div>
                     <div class="pipe-line"></div>
                     <div class="pipe-step">
                         <span class="pipe-dot"><i class="bi bi-cpu-fill"></i></span>
                         <div>
-                            <h4>Classification</h4>
-                            <p>Coordinates only, no imagery</p>
+                            <h4>Judging</h4>
+                            <p>Each rep checked by rules and a trained model</p>
                         </div>
                         <span class="pipe-tag pipe-tag--server">Server</span>
                     </div>

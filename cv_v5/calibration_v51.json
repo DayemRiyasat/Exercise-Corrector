@@ -1,0 +1,100 @@
+{
+ "version": "v5.1 + v6.1",
+ "use_cnn": false,
+ "note": "Re-calibrated after Kaggle Run_4 on the VALIDATION people only (no retraining; same models). Level 1 from the BiGRU correct head with a high-confidence fault veto; per-fault rule weights; fault cut-offs re-tuned without the 3D CNN (which has likely seen QEVD clips). Pushup keeps the v5 fault-driven verdict: its correct head is near chance on validation (clip AUC 0.59, only 10 correct validation clips), so it must not decide level 1. Jump rope and plank (v6.1) were re-calibrated the same way after the v6 Kaggle run, on validation people only.",
+ "rule_weight": {
+  "squat": {
+   "shallow": 0.1,
+   "knees_inward": 0.45,
+   "torso_lean": 0.45,
+   "knees_over_toes": 0.45,
+   "stance_wide": 0.45,
+   "stance_narrow": 0.0
+  },
+  "pushup": {
+   "shallow": 0.45,
+   "hip_sag": 0.45,
+   "hip_pike": 0.45,
+   "head_down": 0.45,
+   "no_lockout": 0.45
+  },
+  "lunge": {
+   "shallow": 0.0,
+   "knee_over_toes": 0.45,
+   "torso_lean": 0.45,
+   "back_knee_straight": 0.45
+  },
+  "jump_rope": {
+   "no_jump": 0.1,
+   "heels_only": 0.0,
+   "side_to_side": 0.0,
+   "no_wrist_circles": 0.0
+  },
+  "plank": {
+   "hip_sag": 0.0,
+   "hip_pike": 0.0,
+   "head_down": 0.25,
+   "head_up": 0.1,
+   "on_knees": 0.0,
+   "shoulders_shrugged": 0.0,
+   "arms_wide": 0.1
+  }
+ },
+ "fusion_thresholds": {
+  "squat": {
+   "shallow": 0.42,
+   "knees_inward": 0.8,
+   "torso_lean": 0.8,
+   "knees_over_toes": 0.4,
+   "stance_wide": 0.42,
+   "stance_narrow": 0.8
+  },
+  "pushup": {
+   "shallow": 0.34,
+   "hip_sag": 0.42,
+   "hip_pike": 0.3,
+   "head_down": 0.68,
+   "no_lockout": 0.5
+  },
+  "lunge": {
+   "shallow": 0.7,
+   "knee_over_toes": 0.48,
+   "torso_lean": 0.78,
+   "back_knee_straight": 0.78
+  },
+  "jump_rope": {
+   "no_jump": 0.84,
+   "heels_only": 0.9,
+   "side_to_side": 0.72,
+   "no_wrist_circles": 0.66
+  },
+  "plank": {
+   "hip_sag": 0.5,
+   "hip_pike": 0.76,
+   "head_down": 0.56,
+   "head_up": 0.9,
+   "on_knees": 0.42,
+   "shoulders_shrugged": 0.9,
+   "arms_wide": 0.78
+  }
+ },
+ "level1": {
+  "squat": {
+   "correct_threshold": 0.43,
+   "veto": 0.9
+  },
+  "pushup": null,
+  "lunge": {
+   "correct_threshold": 0.38,
+   "veto": 0.9
+  },
+  "jump_rope": {
+   "correct_threshold": 0.1,
+   "veto": 1.01
+  },
+  "plank": {
+   "correct_threshold": 0.2,
+   "veto": 1.01
+  }
+ }
+}

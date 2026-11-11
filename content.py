@@ -18,6 +18,14 @@
 #
 # 'none' is the clean-form class. 'unknown' is the model saying it cannot
 # see enough of you to judge.
+#
+# Every exercise is marked 'engine': 'v5', which means it is judged by the
+# Exercise-Corrector pipeline in cv_v5/. Squat, lunge and push-up are judged
+# per whole rep. Exercises marked 'unit': 'window' (jump rope, plank) have no
+# reps and are judged every 2 seconds instead. The fault keys are the
+# pipeline's fault list, plus 'form_issue' for a rep or window it is sure is
+# not clean without one fault standing out. 'photo': False means one photo
+# cannot show the exercise, so the analyser does not offer it.
 
 EXERCISES = {
     'squat': {
@@ -33,7 +41,12 @@ EXERCISES = {
             'Most squat faults are not strength problems, they are position problems, and '
             'position is exactly what a camera can see.'
         ),
-        'camera': 'Film from the side at hip height, roughly three metres back, with your whole body in frame.',
+        'engine': 'v5',
+        'camera': (
+            'Film from the front or at a slight angle, phone at hip height, about three metres back, '
+            'with your whole body in frame. Front-on shows stance and knees caving in best; '
+            'a side angle shows lean and knees past the toes.'
+        ),
         'setup': [
             'Feet about shoulder-width, toes turned out slightly.',
             'Weight spread across the whole foot, not the toes.',
@@ -49,48 +62,75 @@ EXERCISES = {
         'faults': {
             'none': {
                 'status': 'EXCELLENT FORM ✓',
-                'message': 'Perfect squat form!',
-                'tips': ['Keep back straight', 'Chest up', 'Knees aligned with toes', 'Great work!'],
+                'message': 'Clean squat!',
+                'tips': ['Keep the chest up', 'Knees in line with toes', 'Reach the same depth every rep', 'Great work!'],
                 'color': 'success',
                 'label': 'Clean rep',
-                'why': 'Hips, knees and spine are sharing the load the way they should.',
+                'why': 'Depth, stance, knee path and torso angle all stayed inside what a clean rep looks like.',
                 'fix': 'Nothing to change. Hold this position and add load or reps.',
             },
-            'extreme_backward_lean': {
-                'status': 'BACK ISSUE ⚠',
-                'message': 'Do not lean backward',
-                'tips': ['Engage core muscles', 'Maintain neutral spine', 'Keep weight centred'],
-                'color': 'danger',
-                'label': 'Leaning backward',
-                'why': 'Leaning back shifts load off the hips and onto the lower spine, and it usually means the core let go at the bottom.',
-                'fix': 'Brace before you descend and keep your ribs stacked over your pelvis the whole way up.',
+            'shallow': {
+                'status': 'GO DEEPER ⚠',
+                'message': 'Go deeper',
+                'tips': ['Sit down until your thighs reach parallel', 'Keep your heels down at the bottom'],
+                'color': 'warning',
+                'label': 'Too shallow',
+                'why': 'Stopping short of parallel takes the glutes and adductors out of the lift and leaves most of the work on the knees.',
+                'fix': 'Lower until your hip crease is level with your knee. If you cannot get there, widen the stance a little or elevate the heels.',
             },
-            'extreme_forward_lean': {
+            'knees_inward': {
+                'status': 'KNEES CAVING IN ⚠',
+                'message': 'Knees are caving in, push them out',
+                'tips': ['Push your knees out over your toes', 'Spread the floor with your feet'],
+                'color': 'danger',
+                'label': 'Knees caving in',
+                'why': 'Knees collapsing inward twist the knee joint under load and usually mean the hips are not doing their share.',
+                'fix': 'Think about spreading the floor apart with your feet and keep the knees tracking over the middle toes the whole way.',
+            },
+            'torso_lean': {
                 'status': 'FORWARD LEAN ⚠',
-                'message': 'Do not lean too far forward',
-                'tips': ['Keep chest up', 'Look forward', 'Sit back into the squat'],
+                'message': 'Torso leans too far forward, keep the chest up',
+                'tips': ['Keep the chest up', 'Brace before you descend', 'Sit between your heels'],
                 'color': 'warning',
                 'label': 'Leaning forward',
                 'why': 'A heavy forward tip turns the squat into a good morning and loads the lower back instead of the legs.',
-                'fix': 'Sit back rather than down, and check your ankle mobility. Heel-elevated squats often clear this up.',
+                'fix': 'Brace first, keep the chest proud and check your ankle mobility. Heel-elevated squats often clear this up.',
             },
-            'foots_too_close': {
+            'knees_over_toes': {
+                'status': 'KNEES TOO FAR FORWARD ⚠',
+                'message': 'Knees travel too far past the toes, sit back',
+                'tips': ['Start the squat by pushing the hips back', 'Keep the weight over mid-foot'],
+                'color': 'warning',
+                'label': 'Knees too far forward',
+                'why': 'When the knees shoot far past the toes the weight drifts onto the forefoot and the knees take load the hips should carry.',
+                'fix': 'Break at the hips and knees together and keep your weight over the middle of the foot.',
+            },
+            'stance_wide': {
+                'status': 'STANCE TOO WIDE ⚠',
+                'message': 'Feet are too wide, bring them to shoulder width',
+                'tips': ['Bring your feet to shoulder width', 'Toes turned out slightly'],
+                'color': 'warning',
+                'label': 'Stance too wide',
+                'why': 'Too wide and the knees are pushed into the adductors, which limits depth and stresses the groin.',
+                'fix': 'Bring the feet in to about shoulder width, toes turned out around fifteen degrees.',
+            },
+            'stance_narrow': {
                 'status': 'STANCE TOO NARROW ⚠',
-                'message': 'Widen your stance',
+                'message': 'Feet are too close, widen to shoulder width',
                 'tips': ['Feet shoulder-width apart', 'Toes slightly pointed out'],
                 'color': 'warning',
                 'label': 'Stance too narrow',
                 'why': 'A narrow base leaves the hips no room to travel, so depth gets stolen from the lower back.',
                 'fix': 'Step out to roughly shoulder width and turn the toes out about fifteen degrees.',
             },
-            'foots_too_far': {
-                'status': 'STANCE TOO WIDE ⚠',
-                'message': 'Narrow your stance',
-                'tips': ['Bring feet closer', 'Maintain control'],
+            'form_issue': {
+                'status': 'FORM CHECK ⚠',
+                'message': 'This rep does not look like a clean squat',
+                'tips': ['Slow down and control the descent', 'Check depth, stance and chest position'],
                 'color': 'warning',
-                'label': 'Stance too wide',
-                'why': 'Too wide and the knees are pushed into the adductors, which limits depth and stresses the groin.',
-                'fix': 'Bring the feet in until you can reach depth without the knees collapsing inward.',
+                'label': 'Form differs from a clean rep',
+                'why': 'The model is confident the rep was not clean but no single fault stood out.',
+                'fix': 'Film a few slow reps and compare them with the setup and execution points above.',
             },
             'unknown': {
                 'status': 'UNCLEAR POSITION',
@@ -98,7 +138,7 @@ EXERCISES = {
                 'tips': ['Ensure full body visible', 'Stand in good lighting'],
                 'color': 'secondary',
                 'label': 'Unclear position',
-                'why': 'The model cannot see enough joints to make a call.',
+                'why': 'The pose model cannot see enough of you to make a call.',
                 'fix': 'Step back until your head and feet are both in frame, and light yourself from the front.',
             },
         },
@@ -116,7 +156,11 @@ EXERCISES = {
             'Lunges expose the side-to-side differences a squat hides. Because you are balancing '
             'on one leg, small trunk faults show up immediately, which makes them ideal for camera analysis.'
         ),
-        'camera': 'Film from the side so both the front and rear leg stay visible through the whole step.',
+        'engine': 'v5',
+        'camera': (
+            'Film from the front or at a slight angle so both legs stay visible through the whole step. '
+            'A side angle shows the front knee and the back knee best.'
+        ),
         'setup': [
             'Stand tall with feet hip-width apart.',
             'Take a step long enough that both knees can reach ninety degrees.',
@@ -132,48 +176,57 @@ EXERCISES = {
         'faults': {
             'none': {
                 'status': 'EXCELLENT FORM ✓',
-                'message': 'Perfect lunge form!',
-                'tips': ['Keep back straight', 'Front knee over ankle', 'Back knee bent', 'Great work!'],
+                'message': 'Clean lunge!',
+                'tips': ['Torso upright', 'Front knee over ankle', 'Back knee bent', 'Great work!'],
                 'color': 'success',
                 'label': 'Clean rep',
-                'why': 'Torso is upright and the stride length is letting both knees work.',
+                'why': 'Depth, torso angle and both knees stayed inside what a clean rep looks like.',
                 'fix': 'Nothing to change. Add load or slow the descent down.',
             },
-            'extreme_backward_lean': {
-                'status': 'BACK ISSUE ⚠',
-                'message': 'Do not lean backward',
-                'tips': ['Engage core muscles', 'Keep torso upright', 'Look forward'],
-                'color': 'danger',
-                'label': 'Leaning backward',
-                'why': 'Leaning back on a lunge unloads the front leg and puts a shear force through the lower spine.',
-                'fix': 'Brace the core and think about keeping your sternum directly over your belt buckle.',
+            'shallow': {
+                'status': 'GO DEEPER ⚠',
+                'message': 'Go deeper',
+                'tips': ['Lower until the back knee nearly touches the floor', 'Both knees near ninety degrees'],
+                'color': 'warning',
+                'label': 'Too shallow',
+                'why': 'A short lunge never loads the front glute properly and turns the exercise into a bounce.',
+                'fix': 'Lower straight down until the back knee is just short of the floor.',
             },
-            'extreme_forward_lean': {
+            'knee_over_toes': {
+                'status': 'FRONT KNEE TOO FAR ⚠',
+                'message': 'Front knee travels past the toes, shorten or sit back',
+                'tips': ['Keep the front shin close to vertical', 'Take a slightly longer step'],
+                'color': 'warning',
+                'label': 'Front knee too far forward',
+                'why': 'When the front knee drives well past the toes the knee takes the load and the heel tends to lift.',
+                'fix': 'Step a little further out and lower straight down so the front shin stays near vertical.',
+            },
+            'torso_lean': {
                 'status': 'FORWARD LEAN ⚠',
-                'message': 'Do not lean too far forward',
-                'tips': ['Keep chest up', 'Shoulders back', 'Stay vertical'],
+                'message': 'Torso leans too far forward, keep the chest up',
+                'tips': ['Keep chest up', 'Shoulders over hips', 'Stay vertical'],
                 'color': 'warning',
                 'label': 'Leaning forward',
                 'why': 'Tipping forward turns a lunge into a hinge and takes the quads out of the movement.',
-                'fix': 'Shorten the step slightly and lower straight down instead of reaching forward.',
+                'fix': 'Brace the core and keep your shoulders stacked over your hips as you lower.',
             },
-            'foots_too_close': {
-                'status': 'STANCE TOO NARROW ⚠',
-                'message': 'Step further forward',
-                'tips': ['Increase stride length', 'Front foot should be forward'],
+            'back_knee_straight': {
+                'status': 'BEND THE BACK KNEE ⚠',
+                'message': 'Back knee is not bending, drop it toward the floor',
+                'tips': ['Drop the back knee toward the floor', 'Rear heel lifted'],
                 'color': 'warning',
-                'label': 'Stride too short',
-                'why': 'A short stride forces the front knee well past the toes and jams the ankle.',
-                'fix': 'Step a little further out so the front shin can stay near vertical at the bottom.',
+                'label': 'Back knee too straight',
+                'why': 'A straight back leg pulls the hip flexors into a stretch under load and stops you reaching depth.',
+                'fix': 'Think about lowering the back knee straight down rather than pushing the body forward.',
             },
-            'foots_too_far': {
-                'status': 'STANCE TOO WIDE ⚠',
-                'message': 'Reduce stride length',
-                'tips': ['Step closer', 'Maintain balance'],
+            'form_issue': {
+                'status': 'FORM CHECK ⚠',
+                'message': 'This rep does not look like a clean lunge',
+                'tips': ['Slow down and control the descent', 'Check depth and torso position'],
                 'color': 'warning',
-                'label': 'Stride too long',
-                'why': 'An over-long stride stops the rear knee bending and pulls the hip flexors into a stretch under load.',
-                'fix': 'Bring the step in until both knees can fold to about ninety degrees.',
+                'label': 'Form differs from a clean rep',
+                'why': 'The model is confident the rep was not clean but no single fault stood out.',
+                'fix': 'Film a few slow reps and compare them with the setup and execution points above.',
             },
             'unknown': {
                 'status': 'UNCLEAR POSITION',
@@ -181,7 +234,7 @@ EXERCISES = {
                 'tips': ['Ensure full body visible', 'Stand in good lighting'],
                 'color': 'secondary',
                 'label': 'Unclear position',
-                'why': 'The model cannot see enough joints to make a call.',
+                'why': 'The pose model cannot see enough of you to make a call.',
                 'fix': 'Step back so both legs stay in frame for the whole step.',
             },
         },
@@ -199,7 +252,8 @@ EXERCISES = {
             'A push-up is a moving plank. Most of what goes wrong happens at the hips rather than '
             'the arms, and hip height is one of the easiest things to measure from a side-on camera.'
         ),
-        'camera': 'Film from the side at floor level so the line from your shoulders to your heels is visible.',
+        'engine': 'v5',
+        'camera': 'Film from the side or at a slight angle at floor level so the line from your shoulders to your heels is visible.',
         'setup': [
             'Hands just outside shoulder width, fingers pointing forward.',
             'Shoulders stacked directly over your wrists.',
@@ -215,39 +269,66 @@ EXERCISES = {
         'faults': {
             'none': {
                 'status': 'EXCELLENT FORM ✓',
-                'message': 'Perfect push-up form!',
-                'tips': ['Elbows close to body', 'Straight back', 'Full range of motion', 'Great work!'],
+                'message': 'Clean push-up!',
+                'tips': ['Straight line head to heels', 'Full range of motion', 'Great work!'],
                 'color': 'success',
                 'label': 'Clean rep',
-                'why': 'The body is holding one line and the arms are doing the work.',
+                'why': 'The body held one line and the arms worked through the full range.',
                 'fix': 'Nothing to change. Slow the tempo or elevate the feet to progress.',
             },
-            'hand_too_far_or_incorrect_position': {
-                'status': 'HAND POSITION ⚠',
-                'message': 'Adjust hand placement',
-                'tips': ['Hands shoulder-width apart', 'Position under shoulders', 'Fingers forward'],
+            'shallow': {
+                'status': 'GO DEEPER ⚠',
+                'message': 'Go deeper',
+                'tips': ['Lower until the chest is near the floor', 'Elbows to about ninety degrees'],
                 'color': 'warning',
-                'label': 'Hand placement off',
-                'why': 'Hands too far forward or too wide put the shoulder into an exposed position at the bottom.',
-                'fix': 'Move the hands back under the shoulders and keep them just outside shoulder width.',
+                'label': 'Too shallow',
+                'why': 'Half reps skip the hardest part of the push-up, which is where the chest does most of its work.',
+                'fix': 'Lower under control until your chest is a fist away from the floor, then press.',
             },
-            'hips_too_high': {
-                'status': 'HIP POSITION ⚠',
-                'message': 'Lower your hips',
-                'tips': ['Maintain plank position', 'Keep core engaged', 'Straight line head to heels'],
+            'hip_sag': {
+                'status': 'HIPS SAGGING ⚠',
+                'message': 'Hips are sagging, brace the core',
+                'tips': ['Squeeze the glutes', 'Brace as if about to be nudged'],
+                'color': 'danger',
+                'label': 'Hips sagging',
+                'why': 'Sagging hips put the lower back into extension under load and mean the core has switched off.',
+                'fix': 'Squeeze the glutes and brace the abs so the hips stay in line with the shoulders and heels.',
+            },
+            'hip_pike': {
+                'status': 'HIPS TOO HIGH ⚠',
+                'message': 'Hips are too high, keep a straight line',
+                'tips': ['Maintain plank position', 'Straight line head to heels'],
                 'color': 'warning',
                 'label': 'Hips riding high',
                 'why': 'Piking the hips shortens the range and lets the core opt out of the rep.',
-                'fix': 'Squeeze the glutes and tuck the ribs down so the hips drop into line with the shoulders.',
+                'fix': 'Tuck the ribs down and let the hips drop into line with the shoulders.',
             },
-            'incorrect_leg_position': {
-                'status': 'LEG ALIGNMENT ⚠',
-                'message': 'Check leg position',
-                'tips': ['Keep legs straight', 'Feet together', 'Toes on ground'],
+            'head_down': {
+                'status': 'HEAD DROPPING ⚠',
+                'message': 'Head is dropping, keep the neck neutral',
+                'tips': ['Look at the floor just ahead of your hands', 'Chest leads, not the chin'],
                 'color': 'warning',
-                'label': 'Leg alignment off',
-                'why': 'Bent or splayed legs break the straight line the push-up depends on for core tension.',
-                'fix': 'Straighten the knees and bring the feet closer together to narrow the base.',
+                'label': 'Head dropping',
+                'why': 'Reaching for the floor with the head fakes depth and strains the neck.',
+                'fix': 'Keep the head in line with the spine and let the chest, not the face, approach the floor.',
+            },
+            'no_lockout': {
+                'status': 'NO LOCKOUT ⚠',
+                'message': 'Arms do not fully extend at the top',
+                'tips': ['Press all the way up', 'Finish each rep with straight arms'],
+                'color': 'warning',
+                'label': 'No lockout',
+                'why': 'Stopping short at the top cuts the range and keeps the triceps from finishing the rep.',
+                'fix': 'Press until the elbows are straight before starting the next rep.',
+            },
+            'form_issue': {
+                'status': 'FORM CHECK ⚠',
+                'message': 'This rep does not look like a clean push-up',
+                'tips': ['Slow down', 'Hold one straight line head to heels'],
+                'color': 'warning',
+                'label': 'Form differs from a clean rep',
+                'why': 'The model is confident the rep was not clean but no single fault stood out.',
+                'fix': 'Film a few slow reps and compare them with the setup and execution points above.',
             },
             'unknown': {
                 'status': 'UNCLEAR POSITION',
@@ -255,73 +336,98 @@ EXERCISES = {
                 'tips': ['Ensure full body visible', 'Stand in good lighting'],
                 'color': 'secondary',
                 'label': 'Unclear position',
-                'why': 'The model cannot see enough joints to make a call.',
+                'why': 'The pose model cannot see enough of you to make a call.',
                 'fix': 'Lower the camera towards floor level and make sure your feet are still in shot.',
             },
         },
     },
 
-    'deadlift': {
-        'name': 'Deadlift',
-        'icon': 'bi-arrow-bar-up',
-        'tagline': 'Back and hip analysis',
-        'difficulty': 'Intermediate',
-        'pattern': 'Hip-dominant',
-        'muscles': ['Hamstrings', 'Glutes', 'Spinal erectors', 'Lats'],
-        'equipment': 'Barbell or dumbbells',
+    'jump_rope': {
+        'name': 'Jump Rope',
+        'icon': 'bi-arrow-repeat',
+        'tagline': 'Footwork and rhythm analysis',
+        'difficulty': 'Beginner',
+        'pattern': 'Conditioning',
+        'muscles': ['Calves', 'Quadriceps', 'Forearms', 'Shoulders'],
+        'equipment': 'Skipping rope, or none',
         'summary': (
-            'The deadlift carries the highest cost for a bad rep, which is why spine position is '
-            'the one thing worth watching above all else. The model treats back arch as a critical fault, not a warning.'
+            'Good skipping is small, quiet and regular. Jumps are too quick to judge one at a time, so the '
+            'model looks at two seconds of movement at once: how your feet leave the floor, whether you '
+            'stay on one spot, and whether the wrists are turning.'
         ),
-        'camera': 'Film side-on at hip height so the angle of your spine is clearly visible off the floor.',
+        'engine': 'v5',
+        'unit': 'window',
+        'photo': False,
+        'camera': (
+            'Face the camera with the phone at waist height, far enough back that your whole body '
+            'including your feet stays in frame at the top of every jump.'
+        ),
         'setup': [
-            'Bar over mid-foot, shins close but not touching.',
-            'Feet hip-width, toes slightly out.',
-            'Grip just outside the knees, arms straight.',
-            'Set the lats by pulling the bar into your legs before you lift.',
+            'Stand tall with feet hip-width or closer.',
+            'Elbows close to your ribs, hands just in front of your hips.',
+            'Weight on the balls of the feet, knees soft.',
+            'Eyes forward, shoulders relaxed and down.',
         ],
         'execution': [
-            'Take the slack out of the bar before anything moves.',
-            'Push the floor away rather than pulling with the back.',
-            'Hips and shoulders rise at the same rate.',
-            'Finish standing tall without leaning back at the top.',
+            'Turn the rope with small circles from the wrists, not big circles from the shoulders.',
+            'Jump just high enough to clear the rope.',
+            'Land softly on the balls of the feet, heels staying just off the floor.',
+            'Stay on one spot and keep the rhythm even.',
         ],
         'faults': {
             'none': {
                 'status': 'EXCELLENT FORM ✓',
-                'message': 'Perfect deadlift form!',
-                'tips': ['Neutral spine', 'Chest up', 'Hips and shoulders rise together', 'Great work!'],
+                'message': 'Clean skipping!',
+                'tips': ['Small, quiet jumps', 'Land on the balls of the feet', 'Keep the wrists turning', 'Great work!'],
                 'color': 'success',
-                'label': 'Clean rep',
-                'why': 'Spine stayed neutral and the hips and shoulders moved as one unit.',
-                'fix': 'Nothing to change. Add load in small steps and keep the bar path tight.',
+                'label': 'Clean form',
+                'why': 'The feet left the floor, the jumps stayed on one spot and the wrists kept turning.',
+                'fix': 'Nothing to change. Hold the rhythm for longer or pick up the pace.',
             },
-            'back_arch_posture': {
-                'status': 'BACK ARCH - CRITICAL ⚠',
-                'message': 'Keep spine neutral!',
-                'tips': ['Engage core', 'Chest up', 'Do not hyperextend back', 'Maintain neutral spine throughout'],
-                'color': 'danger',
-                'label': 'Back arching',
-                'why': 'Losing the neutral spine under load is the single highest-risk fault the model tracks. It concentrates force on the discs instead of the muscles.',
-                'fix': 'Drop the weight. Rebuild the brace, set the lats, and only add load once the spine angle holds for every rep.',
-            },
-            'hand_grip_width': {
-                'status': 'GRIP WIDTH ⚠',
-                'message': 'Adjust hand position',
-                'tips': ['Hands shoulder-width or slightly wider', 'Arms straight', 'Grip outside knees'],
+            'no_jump': {
+                'status': 'NOT JUMPING ⚠',
+                'message': 'Feet are not leaving the floor, hop a little higher',
+                'tips': ['Hop just high enough to clear the rope', 'Spring from the ankles'],
                 'color': 'warning',
-                'label': 'Grip width off',
-                'why': 'A grip that is too wide or too narrow changes the bar path and makes the lats harder to engage.',
-                'fix': 'Set the hands just outside the knees so the arms hang vertically when you are in position.',
+                'label': 'Feet not leaving the floor',
+                'why': 'Without a real hop the calves and ankles do not load and land, which is where most of the training effect comes from.',
+                'fix': 'Bounce on the spot from the ankles until both feet clear the floor by a couple of centimetres on every turn.',
             },
-            'leg_position_width': {
-                'status': 'STANCE WIDTH ⚠',
-                'message': 'Adjust foot position',
-                'tips': ['Feet hip-width apart', 'Toes slightly out', 'Weight on mid-foot'],
+            'heels_only': {
+                'status': 'HEELS ONLY ⚠',
+                'message': 'Only the heels are moving, push off from the balls of the feet',
+                'tips': ['Push off from the balls of the feet', 'Keep the heels just off the floor'],
                 'color': 'warning',
-                'label': 'Stance width off',
-                'why': 'The wrong stance width pushes the hips too high or too low at the start, which changes which muscles take the first pull.',
-                'fix': 'Reset to hip-width. Your shins should be close to vertical with the bar over mid-foot.',
+                'label': 'Only the heels moving',
+                'why': 'Lifting only the heels looks like jumping but the toes never leave the floor, so the rope has nothing to pass under.',
+                'fix': 'Shift your weight forward onto the balls of the feet and push the whole foot off the floor.',
+            },
+            'side_to_side': {
+                'status': 'DRIFTING SIDEWAYS ⚠',
+                'message': 'Jumping side to side, stay on one spot',
+                'tips': ['Stay on one spot', 'Keep the hips over the feet'],
+                'color': 'warning',
+                'label': 'Jumping side to side',
+                'why': 'Travelling from side to side wastes energy and makes every landing a little off balance.',
+                'fix': 'Pick a mark on the floor and land on it every time, with your hips stacked over your feet.',
+            },
+            'no_wrist_circles': {
+                'status': 'WRISTS NOT TURNING ⚠',
+                'message': 'Turn the rope with small wrist circles',
+                'tips': ['Small circles from the wrists', 'Elbows close to your ribs'],
+                'color': 'warning',
+                'label': 'No wrist circles',
+                'why': 'When the wrists stop turning the shoulders take over, the rope slows down and the arms tire first.',
+                'fix': 'Keep the elbows in and draw small circles with your hands, even when you skip without a rope.',
+            },
+            'form_issue': {
+                'status': 'FORM CHECK ⚠',
+                'message': 'This stretch does not look like clean skipping',
+                'tips': ['Slow down and find an even rhythm', 'Check your feet and wrists'],
+                'color': 'warning',
+                'label': 'Form differs from clean skipping',
+                'why': 'The model is confident the movement was not clean but no single fault stood out.',
+                'fix': 'Film a short slow set and compare it with the setup and execution points above.',
             },
             'unknown': {
                 'status': 'UNCLEAR POSITION',
@@ -329,119 +435,171 @@ EXERCISES = {
                 'tips': ['Ensure full body visible', 'Stand in good lighting'],
                 'color': 'secondary',
                 'label': 'Unclear position',
-                'why': 'The model cannot see enough joints to make a call.',
-                'fix': 'Move the camera side-on and clear anything between you and the lens.',
+                'why': 'The pose model cannot see enough of you to make a call.',
+                'fix': 'Step back until your head and feet stay in frame at the top of every jump.',
             },
         },
     },
 
-    'bicep_curl': {
-        'name': 'Bicep curl',
-        'icon': 'bi-arrow-repeat',
-        'tagline': 'Arm and back analysis',
+    'plank': {
+        'name': 'Plank',
+        'icon': 'bi-stopwatch',
+        'tagline': 'Core and alignment analysis',
         'difficulty': 'Beginner',
-        'pattern': 'Elbow flexion',
-        'muscles': ['Biceps brachii', 'Brachialis', 'Forearm flexors'],
-        'equipment': 'Dumbbells or barbell',
+        'pattern': 'Isometric hold',
+        'muscles': ['Abdominals', 'Obliques', 'Glutes', 'Shoulders'],
+        'equipment': 'Bodyweight',
         'summary': (
-            'Curls look simple, which is why they are the most commonly cheated lift in the gym. '
-            'The model watches the torso as much as the arms, because that is where the cheating happens.'
+            'The elbow plank has no reps, only a position that either holds or slowly gives way. '
+            'The model checks that position every two seconds, so you see the moment your hips start '
+            'to drop rather than finding out afterwards.'
         ),
-        'camera': 'Film from the front so both arms are visible and the model can compare them to each other.',
+        'engine': 'v5',
+        'unit': 'window',
+        'camera': (
+            'Film front-on with the camera at floor level, about 2 to 3 metres in front of you, '
+            'so your whole body is visible. Side-on filming is not supported yet.'
+        ),
         'setup': [
-            'Feet hip-width, knees soft.',
-            'Elbows tucked against your ribs.',
-            'Shoulders back and down, chest open.',
-            'Grip shoulder-width with wrists neutral.',
+            'Forearms on the floor, elbows directly under the shoulders.',
+            'Legs straight, feet together or hip-width.',
+            'Squeeze the glutes and brace the abs before you settle.',
+            'Eyes on the floor just ahead of your hands.',
         ],
         'execution': [
-            'Curl by bending the elbow only, keeping the upper arm still.',
-            'Stop at shoulder level rather than swinging past it.',
-            'Lower under control for longer than you lifted.',
-            'Both arms move together and arrive together.',
+            'Hold one straight line from your head to your heels.',
+            'Push the floor away so the shoulders stay away from your ears.',
+            'Keep breathing, short and steady, without letting the brace go.',
+            'Stop the hold when the line goes, not when the clock says.',
         ],
         'faults': {
             'none': {
                 'status': 'EXCELLENT FORM ✓',
-                'message': 'Perfect bicep curl form!',
-                'tips': ['Elbows stable', 'Controlled movement', 'No momentum', 'Great work!'],
+                'message': 'Clean plank!',
+                'tips': ['Straight line head to heels', 'Elbows under the shoulders', 'Keep breathing', 'Great work!'],
                 'color': 'success',
-                'label': 'Clean rep',
-                'why': 'The torso stayed still and the elbows did all the work.',
-                'fix': 'Nothing to change. Slow the lowering phase to make the same weight harder.',
+                'label': 'Clean form',
+                'why': 'Hips, head and shoulders all stayed inside what a clean hold looks like.',
+                'fix': 'Nothing to change. Add time or lift one foot to progress.',
             },
-            'back_too_backward_lean': {
-                'status': 'BACKWARD LEAN ⚠',
-                'message': 'Do not lean backward!',
-                'tips': ['Engage core', 'Stand upright', 'No momentum', 'Control the weight'],
+            'hip_sag': {
+                'status': 'HIPS SAGGING ⚠',
+                'message': 'Hips are sagging, brace the core',
+                'tips': ['Squeeze the glutes', 'Tuck the tailbone slightly'],
                 'color': 'danger',
-                'label': 'Leaning backward',
-                'why': 'Leaning back to start the curl swaps bicep tension for a lower-back load. It is the classic sign the weight is too heavy.',
-                'fix': 'Drop the weight a notch and stand with your back against a wall to feel what still looks like.',
+                'label': 'Hips sagging',
+                'why': 'Sagging hips hand the hold over to the lower back, which is the opposite of what a plank is for.',
+                'fix': 'Squeeze the glutes and brace the abs so the hips lift back into line. If they keep dropping, end the hold.',
             },
-            'back_too_forward_lean': {
-                'status': 'FORWARD LEAN ⚠',
-                'message': 'Do not lean forward!',
-                'tips': ['Keep torso upright', 'Shoulders back', 'Engage core'],
-                'color': 'danger',
-                'label': 'Leaning forward',
-                'why': 'Tipping forward lets the shoulders take over and shortens the range the biceps actually work through.',
-                'fix': 'Stack the ribs over the hips and brace before each rep.',
-            },
-            'hand_position_too_close': {
-                'status': 'HANDS TOO CLOSE ⚠',
-                'message': 'Widen your grip',
-                'tips': ['Hands shoulder-width apart', 'Natural grip width'],
+            'hip_pike': {
+                'status': 'HIPS TOO HIGH ⚠',
+                'message': 'Hips are too high, keep a straight line',
+                'tips': ['Lower the hips into line', 'Straight line head to heels'],
                 'color': 'warning',
-                'label': 'Hands too close',
-                'why': 'A narrow grip rolls the wrists inward and shifts work off the biceps.',
-                'fix': 'Widen out to shoulder width and keep the wrists in line with the forearms.',
+                'label': 'Hips riding high',
+                'why': 'Piking the hips moves the weight onto the shoulders and lets the abs off the hook.',
+                'fix': 'Tuck the ribs down and let the hips drop into line with the shoulders and heels.',
             },
-            'hand_position_too_wide': {
-                'status': 'HANDS TOO WIDE ⚠',
-                'message': 'Narrow your grip',
-                'tips': ['Bring hands closer', 'Shoulder-width grip'],
+            'head_down': {
+                'status': 'HEAD DROPPING ⚠',
+                'message': 'Head is dropping, keep the neck neutral',
+                'tips': ['Look at the floor just ahead of your hands', 'Long back of the neck'],
                 'color': 'warning',
-                'label': 'Hands too wide',
-                'why': 'A very wide grip puts the wrists and elbows at an angle they cannot hold under load.',
-                'fix': 'Bring the hands back to shoulder width so the forearms stay vertical.',
+                'label': 'Head dropping',
+                'why': 'Letting the head hang strains the neck and usually pulls the shoulders round with it.',
+                'fix': 'Lift the head until your ears line up with your shoulders.',
             },
-            'hand_above_near_head': {
-                'status': 'OVER-CURLING ⚠',
-                'message': 'Do not curl too high',
-                'tips': ['Stop at shoulder level', 'Do not swing weights', 'Control the motion'],
+            'head_up': {
+                'status': 'HEAD LIFTED ⚠',
+                'message': 'Head is lifted, look at the floor just ahead of your hands',
+                'tips': ['Look at the floor just ahead of your hands', 'Tuck the chin slightly'],
                 'color': 'warning',
-                'label': 'Curling too high',
-                'why': 'Past shoulder height the elbow travels forward and the biceps unload at the very point you think you are peaking.',
-                'fix': 'Finish the rep at shoulder level and hold for a beat before lowering.',
+                'label': 'Head lifted',
+                'why': 'Looking forward crunches the back of the neck for the whole length of the hold.',
+                'fix': 'Tuck the chin slightly and rest your eyes on the floor just ahead of your hands.',
             },
-            'one_hand_up_other_down': {
-                'status': 'ASYMMETRIC ⚠',
-                'message': 'Keep both hands level',
-                'tips': ['Curl both arms together', 'Maintain symmetry', 'Equal weight on both sides'],
+            'on_knees': {
+                'status': 'KNEES DOWN ⚠',
+                'message': 'Knees are on the floor, lift them and hold a straight line',
+                'tips': ['Lift the knees', 'Push back through the heels'],
                 'color': 'warning',
-                'label': 'Arms out of sync',
-                'why': 'One arm leading usually means a real strength difference, and training around it makes the gap wider.',
-                'fix': 'Switch to single-arm curls for a few weeks and match the weaker side.',
+                'label': 'Knees on the floor',
+                'why': 'With the knees down the hold gets much shorter and easier, so the abs do far less work.',
+                'fix': 'Straighten the legs and lift the knees. If you need the easier version, end the set there and rest.',
+            },
+            'shoulders_shrugged': {
+                'status': 'SHOULDERS SHRUGGED ⚠',
+                'message': 'Shoulders are shrugged toward the ears, push them down',
+                'tips': ['Push the floor away', 'Long neck, shoulders down'],
+                'color': 'warning',
+                'label': 'Shoulders shrugged',
+                'why': 'Shrugging sinks the chest between the shoulders and loads the neck instead of the shoulder blades.',
+                'fix': 'Press the forearms into the floor and spread the shoulder blades apart.',
+            },
+            'arms_wide': {
+                'status': 'ELBOWS TOO WIDE ⚠',
+                'message': 'Elbows are too wide, place them under the shoulders',
+                'tips': ['Elbows under the shoulders', 'Forearms parallel'],
+                'color': 'warning',
+                'label': 'Elbows too wide',
+                'why': 'Elbows outside the shoulders take the arms out of the stack and put extra strain on the front of the shoulder.',
+                'fix': 'Bring the elbows in until they sit directly below your shoulders.',
+            },
+            'form_issue': {
+                'status': 'FORM CHECK ⚠',
+                'message': 'This stretch does not look like a clean plank',
+                'tips': ['Reset your position', 'Hold one straight line head to heels'],
+                'color': 'warning',
+                'label': 'Form differs from a clean hold',
+                'why': 'The model is confident the hold was not clean but no single fault stood out.',
+                'fix': 'Film a short hold and compare it with the setup and execution points above.',
             },
             'unknown': {
                 'status': 'UNCLEAR POSITION',
                 'message': 'Position yourself in frame',
-                'tips': ['Ensure upper body visible', 'Stand in good lighting'],
+                'tips': ['Ensure full body visible', 'Stay in good lighting'],
                 'color': 'secondary',
                 'label': 'Unclear position',
-                'why': 'The model cannot see enough joints to make a call.',
-                'fix': 'Face the camera and make sure both arms stay in frame.',
+                'why': 'The pose model cannot see enough of you to make a call.',
+                'fix': 'Lower the camera to floor level and make sure your feet are still in shot.',
             },
         },
     },
 }
 
 # Order the library and the pickers are displayed in.
-EXERCISE_ORDER = ['squat', 'lunge', 'pushup', 'deadlift', 'bicep_curl']
+EXERCISE_ORDER = ['squat', 'lunge', 'pushup', 'jump_rope', 'plank']
 
 # Classes that are not faults: one is a clean rep, one is a non-reading.
-NON_FAULT_KEYS = {'none', 'unknown'}
+NON_FAULT_KEYS = {'none', 'unknown', 'form_issue'}
+
+# Fault keys the earlier models used, including the retired deadlift and
+# bicep curl. Sessions saved before the switch still carry them, so the
+# dashboard keeps a readable name for each.
+LEGACY_FAULT_LABELS = {
+    'extreme_backward_lean': 'Leaning backward',
+    'extreme_forward_lean': 'Leaning forward',
+    'foots_too_close': 'Stance too narrow',
+    'foots_too_far': 'Stance too wide',
+    'hand_too_far_or_incorrect_position': 'Hand placement off',
+    'hips_too_high': 'Hips riding high',
+    'incorrect_leg_position': 'Leg alignment off',
+    'back_arch_posture': 'Back arching',
+    'hand_grip_width': 'Grip width off',
+    'leg_position_width': 'Stance width off',
+    'back_too_backward_lean': 'Leaning backward',
+    'back_too_forward_lean': 'Leaning forward',
+    'hand_position_too_close': 'Hands too close',
+    'hand_position_too_wide': 'Hands too wide',
+    'hand_above_near_head': 'Curling too high',
+    'one_hand_up_other_down': 'Arms out of sync',
+}
+
+# Exercises that are gone from the library but may be in saved sessions.
+LEGACY_EXERCISES = {
+    'deadlift': {'name': 'Deadlift', 'icon': 'bi-arrow-bar-up', 'unit': 'rep', 'retired': True},
+    'bicep_curl': {'name': 'Bicep curl', 'icon': 'bi-arrow-repeat', 'unit': 'rep', 'retired': True},
+}
 
 
 # ---------------------------------------------------------------------------
@@ -471,7 +629,8 @@ def get_exercise(slug):
     ex = EXERCISES.get(slug)
     if not ex:
         return None
-    return {**ex, 'slug': slug, 'fault_count': count_faults(slug)}
+    return {**ex, 'slug': slug, 'fault_count': count_faults(slug),
+            'unit': ex.get('unit', 'rep'), 'photo': ex.get('photo', True)}
 
 
 def all_exercises():
@@ -499,6 +658,8 @@ def fault_label(exercise_slug, fault_key):
     fault = ex.get('faults', {}).get(fault_key)
     if fault:
         return fault['label']
+    if fault_key in LEGACY_FAULT_LABELS:
+        return LEGACY_FAULT_LABELS[fault_key]
     return str(fault_key or '').replace('_', ' ').capitalize()
 
 
@@ -507,7 +668,7 @@ def site_stats():
     so they stay true when the library changes."""
     return {
         'exercises': len(EXERCISES),
-        'landmarks': 33,           # MediaPipe pose topology
+        'landmarks': 17,           # YOLO11 pose (COCO) joints
         'checks_per_second': 7,    # ~150 ms analysis interval
         'faults': total_faults(),
     }
@@ -525,17 +686,17 @@ HOW_IT_WORKS = [
     {
         'icon': 'bi-camera-video',
         'title': 'Frame yourself',
-        'body': 'Use your webcam, upload a clip, or check a single photo. Pose detection runs in your browser, so the video never leaves your device.',
+        'body': 'Use your webcam, upload a clip, or check a single photo. Frames are analysed and thrown away, never stored.',
     },
     {
         'icon': 'bi-activity',
         'title': 'Move',
-        'body': 'Reps are counted automatically and every frame is classified while you lift. Corrections appear in under a second, not after the set.',
+        'body': 'Reps are counted automatically and each one is judged as soon as you finish it, so corrections arrive during the set, not after it. Jump rope and plank are judged every two seconds.',
     },
     {
         'icon': 'bi-graph-up-arrow',
         'title': 'Review',
-        'body': 'Each set is saved with its rep count, clean-rep percentage and the faults you hit, so you can see whether the fix is holding.',
+        'body': 'Each set is saved with its count, clean percentage and the faults you hit, so you can see whether the fix is holding.',
     },
 ]
 
@@ -549,14 +710,14 @@ FEATURES = [
     {
         'icon': 'bi-shield-lock',
         'art': 'privacy',
-        'title': 'Video never leaves your device',
-        'body': 'Pose detection runs in the browser. Only 33 anonymous joint coordinates are sent for classification, never the footage.',
+        'title': 'Video is never stored',
+        'body': 'Frames are analysed on the server and discarded straight away. Nothing you film is kept or written to your history.',
     },
     {
         'icon': 'bi-123',
         'art': 'counting',
         'title': 'Reps counted for you',
-        'body': 'A state machine per exercise tracks the movement phase, so the count follows real range of motion rather than a timer.',
+        'body': 'The count follows real range of motion rather than a timer. Skipping counts your jumps and a plank times your hold instead.',
     },
     {
         'icon': 'bi-clipboard-data',
@@ -581,11 +742,11 @@ FEATURES = [
 FAQ = [
     {
         'q': 'What does the system actually analyse?',
-        'a': 'Your browser extracts 33 body landmarks from each frame using MediaPipe pose detection. Those coordinates are sent to a neural network trained for the specific exercise you picked, which classifies the rep as clean or names the fault it sees.',
+        'a': 'A YOLO11 pose model on the server finds your joints in every frame. Each finished rep is then judged by rules on your joint angles together with a neural network trained on thousands of labelled reps, which calls the rep clean or names the faults it sees. Jump rope and plank have no reps, so the same checks run on every two seconds of movement.',
     },
     {
         'q': 'Does my video get uploaded anywhere?',
-        'a': 'No. Pose detection runs entirely in your browser. The only thing sent to the server is a list of anonymous joint coordinates, which cannot be turned back into an image of you. Your webcam feed and any clips you upload stay on your device.',
+        'a': 'Yes: frames, clips and photos are sent to the server so the pose model can analyse them, and they are discarded as soon as that is done. Nothing is stored.',
     },
     {
         'q': 'How accurate is it?',
@@ -601,7 +762,7 @@ FAQ = [
     },
     {
         'q': 'Where should I put the camera?',
-        'a': 'For squats, lunges, push-ups and deadlifts, film side-on. For bicep curls, face the camera so both arms are visible and can be compared. Each exercise page in the library gives the specific framing it expects.',
+        'a': 'For squats and lunges, film from the front or at a slight angle with your whole body in frame. For push-ups, film side-on or at a slight angle at floor level. For jump rope, face the camera with the phone at waist height and your feet in frame. For planks, film front-on with the camera at floor level, about 2 to 3 metres in front of you, so your whole body is visible. Side-on filming is not supported yet for planks. Each exercise page in the library gives the specific framing it expects.',
     },
     {
         'q': 'Do I need an account?',
@@ -609,11 +770,11 @@ FAQ = [
     },
     {
         'q': 'What equipment do I need?',
-        'a': 'A device with a camera and a modern browser. Squats, lunges and push-ups need nothing else. Deadlifts and curls assume you have a barbell or dumbbells, though the analysis works on the empty-handed movement too.',
+        'a': 'A device with a camera and a modern browser. Nothing else is needed. Squats and lunges can be loaded if you want, and jump rope can be done with a rope or without one.',
     },
     {
         'q': 'Why are my reps not being counted?',
-        'a': 'The rep counter waits for a full range of motion and enforces a minimum interval between reps, so partials and bounces are ignored on purpose. If nothing is counting at all, check that your whole body is in frame and that the confidence bar is not sitting near zero.',
+        'a': 'The rep counter waits for a full range of motion and enforces a minimum interval between reps, so partials and bounces are ignored on purpose. Jump rope and plank are not counted in reps: they are judged every two seconds. If nothing is counting at all, check that your whole body is in frame and that the confidence bar is not sitting near zero.',
     },
     {
         'q': 'Can I use it on my phone?',

@@ -1,6 +1,10 @@
 // static/js/pose_client.js
 // Browser-side pose detection with MediaPipe Tasks for JavaScript.
 // Extracts the 33 landmarks and posts them to the Flask backend.
+//
+// No exercise uses this route any more. app.js only imports this file if an
+// exercise is marked with the legacy engine, because the import below pulls
+// MediaPipe from a CDN.
 
 import { FilesetResolver, PoseLandmarker }
   from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
@@ -64,18 +68,10 @@ async function postJson(url, payload) {
   return res.json();
 }
 
-export function loadModel(exerciseType) {
-  return postJson("/api/load_model", { exercise_type: exerciseType });
-}
-
 export function analyzeFrame(exerciseType, landmarks) {
   return postJson("/api/analyze_frame", { exercise_type: exerciseType, landmarks });
 }
 
 export function analyzeImage(exerciseType, landmarks) {
   return postJson("/api/analyze_image", { exercise_type: exerciseType, landmarks });
-}
-
-export function resetCounter(exerciseType) {
-  return postJson("/api/reset_counter", { exercise_type: exerciseType });
 }

@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+# YOLO pose weights are too big for git (yolo11x-pose.pt is 118 MB). The
+# pipeline downloads yolo11x-pose.pt automatically if cv_v5/ has no copy.
+*.pt
+!cv_v5/models/*/pose_gru.pt
+sessions.db

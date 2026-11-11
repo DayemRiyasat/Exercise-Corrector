@@ -1,5 +1,5 @@
 // static/js/api.js
-// Thin wrapper over the session and stats endpoints.
+// Thin wrapper over the session, stats and model-loading endpoints.
 //
 // Every call resolves to an object rather than throwing, so a page can
 // degrade quietly if the network drops mid-set instead of losing the
@@ -19,6 +19,20 @@ async function request(url, options) {
   } catch (err) {
     return { success: false, error: err.message || 'Network error' };
   }
+}
+
+export function loadModel(exerciseType) {
+  return request('/api/load_model', {
+    method: 'POST',
+    body: JSON.stringify({ exercise_type: exerciseType })
+  });
+}
+
+export function resetCounter(exerciseType) {
+  return request('/api/reset_counter', {
+    method: 'POST',
+    body: JSON.stringify({ exercise_type: exerciseType })
+  });
 }
 
 export function fetchSessions(exercise) {
